@@ -6,13 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Download } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { ABCConfiguration, AnalysisPeriod } from "@/types/abc";
+import { format } from "date-fns";
 
 interface ABCTableProps {
   items: MedicineItem[];
   onDeleteItem?: (id: string) => void;
+  abcConfig: ABCConfiguration;
+  period: AnalysisPeriod;
 }
 
-export const ABCTable = ({ items, onDeleteItem }: ABCTableProps) => {
+export const ABCTable = ({ items, onDeleteItem, abcConfig, period }: ABCTableProps) => {
   const getClassBadge = (classification: "A" | "B" | "C") => {
     const variants = {
       A: "bg-[hsl(var(--class-a))] text-[hsl(var(--class-a-foreground))] hover:bg-[hsl(var(--class-a))]",
@@ -48,24 +52,92 @@ export const ABCTable = ({ items, onDeleteItem }: ABCTableProps) => {
   };
 
   const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(
-      items.map((item) => ({
-        Código: item.code,
-        Nome: item.name,
-        Unidade: getUnitLabel(item.unit),
-        Quantidade: item.quantity,
-        "Preço Unitário": item.unitPrice,
-        "Valor Total": item.totalValue,
-        "% Individual": item.percentage,
-        "% Acumulado": item.accumulatedPercentage,
-        Classe: item.classification,
-        "Criticidade Clínica": item.clinicalCriticality,
-      }))
-    );
+    // Aba 1: Dados Completos
+    const data = items.map(item => ({
+      Código: item.code,
+      Nome: item.name,
+      Unidade: getUnitLabel(item.unit),
+      Quantidade: item.quantity,
+      "Preço Unitário": formatCurrency(item.unitPrice),
+      "Valor Total": formatCurrency(item.totalValue),
+      "% Individual": formatPercentage(item.percentage),
+      "% Acumulado": formatPercentage(item.accumulatedPercentage),
+      Classificação: item.classification,
+      "Criticidade Clínica": item.clinicalCriticality,
+    }));
+
+    const ws1 = XLSX.utils.json_to_sheet(data);
+
+    // Aba 2: Resumo por Classe
+    const classA = items.filter(item => item.classification === "A");
+    const classB = items.filter(item => item.classification === "B");
+    const classC = items.filter(item => item.classification === "C");
     
+    const totalValue = items.reduce((sum, item) => sum + item.totalValue, 0);
+    const classAValue = classA.reduce((sum, item) => sum + item.totalValue, 0);
+    const classBValue = classB.reduce((sum, item) => sum + item.totalValue, 0);
+    const classCValue = classC.reduce((sum, item) => sum + item.totalValue, 0);
+
+    const summary = [
+      { 
+        Classe: "A", 
+        "Quantidade de Itens": classA.length,
+        "% de Itens": `${((classA.length / items.length) * 100).toFixed(1)}%`,
+        "Valor Total": formatCurrency(classAValue),
+        "% do Valor": `${((classAValue / totalValue) * 100).toFixed(1)}%`
+      },
+      { 
+        Classe: "B", 
+        "Quantidade de Itens": classB.length,
+        "% de Itens": `${((classB.length / items.length) * 100).toFixed(1)}%`,
+        "Valor Total": formatCurrency(classBValue),
+        "% do Valor": `${((classBValue / totalValue) * 100).toFixed(1)}%`
+      },
+      { 
+        Classe: "C", 
+        "Quantidade de Itens": classC.length,
+        "% de Itens": `${((classC.length / items.length) * 100).toFixed(1)}%`,
+        "Valor Total": formatCurrency(classCValue),
+        "% do Valor": `${((classCValue / totalValue) * 100).toFixed(1)}%`
+      },
+    ];
+
+    const ws2 = XLSX.utils.json_to_sheet(summary);
+
+    // Aba 3: Top 10 Críticos
+    const top10 = items.slice(0, 10).map((item, index) => ({
+      Posição: index + 1,
+      Código: item.code,
+      Nome: item.name,
+      "Valor Total": formatCurrency(item.totalValue),
+      "% do Total": formatPercentage(item.percentage),
+      "Criticidade Clínica": item.clinicalCriticality,
+      Classificação: item.classification,
+    }));
+
+    const ws3 = XLSX.utils.json_to_sheet(top10);
+
+    // Aba 4: Configurações
+    const config = [
+      { Parâmetro: "Período de Início", Valor: format(period.startDate, "dd/MM/yyyy") },
+      { Parâmetro: "Período de Fim", Valor: format(period.endDate, "dd/MM/yyyy") },
+      { Parâmetro: "Threshold Classe A (%)", Valor: abcConfig.classAThreshold },
+      { Parâmetro: "Threshold Classe B (%)", Valor: abcConfig.classBThreshold },
+      { Parâmetro: "Total de Itens Analisados", Valor: items.length },
+      { Parâmetro: "Valor Total Investido", Valor: formatCurrency(totalValue) },
+    ];
+
+    const ws4 = XLSX.utils.json_to_sheet(config);
+
+    // Criar workbook com todas as abas
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Curva ABC");
-    XLSX.writeFile(wb, `Curva_ABC_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws1, "Dados Completos");
+    XLSX.utils.book_append_sheet(wb, ws2, "Resumo por Classe");
+    XLSX.utils.book_append_sheet(wb, ws3, "Top 10 Críticos");
+    XLSX.utils.book_append_sheet(wb, ws4, "Configurações");
+
+    const fileName = `Curva_ABC_${format(period.startDate, "yyyy-MM-dd")}_a_${format(period.endDate, "yyyy-MM-dd")}.xlsx`;
+    XLSX.writeFile(wb, fileName);
     toast.success("Relatório exportado com sucesso!");
   };
 
