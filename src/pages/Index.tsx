@@ -3,6 +3,8 @@ import { MedicineForm, MedicineItem } from "@/components/MedicineForm";
 import { ABCTable } from "@/components/ABCTable";
 import { ABCChart } from "@/components/ABCChart";
 import { ABCSummary } from "@/components/ABCSummary";
+import { ABCAnalysis } from "@/components/ABCAnalysis";
+import { StrategicRecommendations } from "@/components/StrategicRecommendations";
 import { Activity } from "lucide-react";
 
 const Index = () => {
@@ -52,6 +54,11 @@ const Index = () => {
     setItems(updatedItems);
   };
 
+  const handleDeleteItem = (id: string) => {
+    const updatedItems = calculateABC(items.filter(item => item.id !== id));
+    setItems(updatedItems);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card shadow-[var(--shadow-soft)]">
@@ -74,11 +81,13 @@ const Index = () => {
         {items.length > 0 && (
           <>
             <ABCSummary items={items} />
+            <ABCAnalysis items={items} />
+            <StrategicRecommendations items={items} />
             <ABCChart items={items} />
           </>
         )}
         
-        <ABCTable items={items} />
+        <ABCTable items={items} onDeleteItem={handleDeleteItem} />
       </main>
     </div>
   );
