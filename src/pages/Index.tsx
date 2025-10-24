@@ -9,6 +9,17 @@ import { ImportWizard } from "@/components/ImportWizard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity } from "lucide-react";
 import { ABCConfiguration as ABCConfig, AnalysisPeriod } from "@/types/abc";
+import { PieChart } from "@/components/charts/PieChart";
+import { BarChart } from "@/components/charts/BarChart";
+import { ScatterChart } from "@/components/charts/ScatterChart";
+import { LineChart } from "@/components/charts/LineChart";
+import { HeatmapChart } from "@/components/charts/HeatmapChart";
+import { StatisticsPanel } from "@/components/StatisticsPanel";
+import { InsightsPanel } from "@/components/InsightsPanel";
+import { MLPanel } from "@/components/MLPanel";
+import { calculateDescriptiveStats } from "@/lib/statistics/descriptiveStats";
+import { generateInsights } from "@/lib/insights/insightGenerator";
+import { AnomalyResult, ClusterResult } from "@/types/ml";
 
 const Index = () => {
   const [items, setItems] = useState<MedicineItem[]>([]);
@@ -20,6 +31,11 @@ const Index = () => {
     startDate: new Date(new Date().getFullYear(), 0, 1),
     endDate: new Date(),
   });
+  const [anomalies, setAnomalies] = useState<AnomalyResult[]>([]);
+
+  // Calcular estatísticas e insights
+  const stats = calculateDescriptiveStats(items);
+  const insights = generateInsights(items, anomalies, stats);
 
   const calculateABC = (newItems: MedicineItem[], config: ABCConfig = abcConfig) => {
     const sortedItems = [...newItems].sort((a, b) => b.totalValue - a.totalValue);
@@ -75,6 +91,10 @@ const Index = () => {
     setItems(updatedItems);
   };
 
+  const handleMLAnalysis = (clusters: ClusterResult[], detectedAnomalies: AnomalyResult[]) => {
+    setAnomalies(detectedAnomalies);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card shadow-[var(--shadow-soft)]">
@@ -113,14 +133,44 @@ const Index = () => {
           </TabsContent>
         </Tabs>
         
-        {items.length > 0 && (
-          <>
-            <ABCSummary items={items} />
-            <ABCAnalysis items={items} />
-            <StrategicRecommendations items={items} />
-            <ABCChart items={items} />
-          </>
-        )}
+      {items.length > 0 && (
+        <>
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+              <TabsTrigger value="charts">Gráficos</TabsTrigger>
+              <TabsTrigger value="ml">Machine Learning</TabsTrigger>
+              <TabsTrigger value="insights">Insights</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-6">
+              <ABCSummary items={items} />
+              <ABCAnalysis items={items} />
+              <StrategicRecommendations items={items} />
+              <ABCChart items={items} />
+            </TabsContent>
+
+            <TabsContent value="charts" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <PieChart items={items} />
+                <BarChart items={items} />
+                <ScatterChart items={items} />
+                <LineChart items={items} />
+              </div>
+              <HeatmapChart items={items} />
+            </TabsContent>
+
+            <TabsContent value="ml" className="space-y-6">
+              <MLPanel items={items} onAnalysisComplete={handleMLAnalysis} />
+              <StatisticsPanel stats={stats} />
+            </TabsContent>
+
+            <TabsContent value="insights" className="space-y-6">
+              <InsightsPanel insights={insights} />
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
         
         <ABCTable 
           items={items} 
