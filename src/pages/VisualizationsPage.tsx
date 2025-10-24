@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDataStore } from '@/store/dataStore';
 import { FilterBar } from '@/components/shared/FilterBar';
 import { ABCChart } from '@/components/ABCChart';
@@ -23,82 +22,61 @@ export default function VisualizationsPage() {
 
       <FilterBar />
 
-      <Tabs defaultValue="pareto" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
-          <TabsTrigger value="pareto">Pareto</TabsTrigger>
-          <TabsTrigger value="pie">Pizza</TabsTrigger>
-          <TabsTrigger value="bar">Barras</TabsTrigger>
-          <TabsTrigger value="scatter">Dispersão</TabsTrigger>
-          <TabsTrigger value="line">Linha</TabsTrigger>
-          <TabsTrigger value="heatmap">Mapa de Calor</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Curva de Pareto</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ABCChart items={filteredItems} />
+          </CardContent>
+        </Card>
 
-        <TabsContent value="pareto" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Curva de Pareto</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ABCChart items={filteredItems} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <Card>
+          <CardHeader>
+            <CardTitle>Distribuição por Classe ABC</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PieChart items={filteredItems} />
+          </CardContent>
+        </Card>
 
-        <TabsContent value="pie" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Distribuição por Classe ABC</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PieChart items={filteredItems} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <Card>
+          <CardHeader>
+            <CardTitle>Top 10 Itens por Valor</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <BarChart items={filteredItems} />
+          </CardContent>
+        </Card>
 
-        <TabsContent value="bar" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Top 10 Itens por Valor</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BarChart items={filteredItems} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <Card>
+          <CardHeader>
+            <CardTitle>Quantidade vs Preço Unitário</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScatterChart items={filteredItems} />
+          </CardContent>
+        </Card>
 
-        <TabsContent value="scatter" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quantidade vs Preço Unitário</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScatterChart items={filteredItems} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <Card>
+          <CardHeader>
+            <CardTitle>Valor Acumulado</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LineChart items={filteredItems} />
+          </CardContent>
+        </Card>
 
-        <TabsContent value="line" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Valor Acumulado</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <LineChart items={filteredItems} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="heatmap" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Valor por Criticidade e Classe ABC</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <HeatmapChart items={filteredItems} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        <Card>
+          <CardHeader>
+            <CardTitle>Valor por Criticidade e Classe ABC</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <HeatmapChart items={filteredItems} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
