@@ -6,11 +6,9 @@ import { useDataStore } from '@/store/dataStore';
 import { useMLStore } from '@/store/mlStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { FilterBar } from '@/components/shared/FilterBar';
-import { ABCChart } from '@/components/ABCChart';
 import { ABCTable } from '@/components/ABCTable';
 import { ABCSummary } from '@/components/ABCSummary';
-import { PieChart } from '@/components/charts/PieChart';
-import { BarChart } from '@/components/charts/BarChart';
+import { ChartWidget } from '@/components/charts/ChartWidget';
 
 export default function Dashboard() {
   const { filteredItems } = useDataStore();
@@ -100,32 +98,19 @@ export default function Dashboard() {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Curva de Pareto</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ABCChart items={filteredItems} />
-          </CardContent>
-        </Card>
+        <ChartWidget
+          items={filteredItems}
+          defaultChartId="pareto"
+          enableComparison
+          onCompare={(items) => console.log('Comparar:', items)}
+        />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribuição por Classe</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PieChart items={filteredItems} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Top 10 Itens por Valor</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BarChart items={filteredItems} />
-          </CardContent>
-        </Card>
+        <ChartWidget
+          items={filteredItems}
+          defaultChartId="pie"
+          enableComparison
+          onCompare={(items) => console.log('Comparar:', items)}
+        />
 
         <Card>
           <CardHeader>
