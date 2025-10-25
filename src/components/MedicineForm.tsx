@@ -7,22 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
-export interface MedicineItem {
-  id: string;
-  code: string;
-  name: string;
-  unit: string;
-  quantity: number;
-  unitPrice: number;
-  totalValue: number;
-  percentage: number;
-  accumulatedPercentage: number;
-  classification: "A" | "B" | "C";
-  clinicalCriticality: "alta" | "média" | "baixa";
-}
+export type { MedicineItem } from "@/types/medicine";
 
 interface MedicineFormProps {
-  onAddItem: (item: Omit<MedicineItem, "id" | "totalValue" | "percentage" | "accumulatedPercentage" | "classification">) => void;
+  onAddItem: (item: { code: string; name: string; unit: string; quantity: number; unitPrice: number; clinicalCriticality: "alta" | "média" | "baixa" }) => void;
 }
 
 export const UNITS = [

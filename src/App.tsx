@@ -14,6 +14,7 @@ import SettingsPage from "./pages/SettingsPage";
 import ReportsPage from "./pages/ReportsPage";
 import SavedDataPage from "./pages/SavedDataPage";
 import HelpPage from "./pages/HelpPage";
+import FieldsDocPage from "./pages/FieldsDocPage";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="reports" element={<ReportsPage />} />
               <Route path="saved-data" element={<SavedDataPage />} />
               <Route path="help" element={<HelpPage />} />
+              <Route path="fields-doc" element={<FieldsDocPage />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

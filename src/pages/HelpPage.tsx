@@ -24,15 +24,15 @@ export default function HelpPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-primary" />
-              <CardTitle>Documentação</CardTitle>
+              <CardTitle>Documentação de Campos</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Guias completos sobre todas as funcionalidades
+              Referência completa de todos os campos disponíveis
             </p>
-            <Button variant="outline" className="w-full">
-              Ver Documentação
+            <Button variant="outline" className="w-full" onClick={() => window.location.href = '/fields-doc'}>
+              Ver Campos
             </Button>
           </CardContent>
         </Card>
@@ -96,9 +96,17 @@ export default function HelpPage() {
               <AccordionTrigger>Como importar meus dados?</AccordionTrigger>
               <AccordionContent>
                 Vá até a página "Importar Dados" e faça upload de um arquivo Excel (.xlsx, .xls)
-                ou CSV contendo as colunas: nome do item, quantidade, valor unitário e criticidade
-                clínica. O sistema irá detectar automaticamente as colunas e você poderá ajustar o
-                mapeamento se necessário.
+                ou CSV. O sistema detecta automaticamente mais de 40 campos diferentes incluindo:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li><strong>Básicos:</strong> Nome, Quantidade, Preço (obrigatórios)</li>
+                  <li><strong>Logísticos:</strong> Categoria, Fornecedor, Lead Time, Estoque</li>
+                  <li><strong>Temporais:</strong> Data Movimentação, Mês, Ano</li>
+                  <li><strong>Clínicos:</strong> Indicação Terapêutica, Princípio Ativo, Via Administração</li>
+                  <li><strong>Financeiros:</strong> Custo Total, Margem, Desconto, Impostos</li>
+                  <li><strong>Operacionais:</strong> Setor, Centro de Custo, Tipo Movimento</li>
+                </ul>
+                <p className="mt-2">Apenas 3 campos são obrigatórios: Nome, Quantidade e Preço Unitário. 
+                Quanto mais campos você mapear, mais análises avançadas estarão disponíveis.</p>
               </AccordionContent>
             </AccordionItem>
 
@@ -142,11 +150,15 @@ export default function HelpPage() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Versão:</span>
-              <span className="font-medium">1.0.0 (Release 1)</span>
+              <span className="font-medium">2.0.0 (Release 2 + Expansão Completa)</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Última atualização:</span>
               <span className="font-medium">Outubro 2025</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Campos suportados:</span>
+              <span className="font-medium">40+ campos</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Licença:</span>
