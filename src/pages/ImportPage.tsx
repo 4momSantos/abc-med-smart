@@ -2,23 +2,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ImportWizard } from '@/components/ImportWizard';
 import { StatusWidget } from '@/components/http-sync/StatusWidget';
-import { ConnectionTab } from '@/components/http-sync/ConnectionTab';
-import { MappingTab } from '@/components/http-sync/MappingTab';
-import { TransformationsTab } from '@/components/http-sync/TransformationsTab';
-import { ScheduleTab } from '@/components/http-sync/ScheduleTab';
-import { LogsTab } from '@/components/http-sync/LogsTab';
+import { HttpSyncConfigSection } from '@/components/http-sync/HttpSyncConfigSection';
 import { useDataStore } from '@/store/dataStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useHttpSync } from '@/hooks/useHttpSync';
 import { useNavigate } from 'react-router-dom';
 import { Upload, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
 
 export default function ImportPage() {
   const { setItems } = useDataStore();
   const { abcConfig, updateABCConfig, period, setPeriod } = useSettingsStore();
   const navigate = useNavigate();
-  const [syncTab, setSyncTab] = useState('status');
 
   const {
     config,
@@ -89,83 +83,19 @@ export default function ImportPage() {
             lastSync={lastSync}
             loading={loading}
             error={error}
-            hasConfig={!!config}
+            configExists={!!config}
             onStart={startSync}
             onStop={stopSync}
             onSyncNow={syncNow}
           />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuração HTTP Sync</CardTitle>
-              <CardDescription>
-                Configure a sincronização automática com APIs externas via HTTP Basic Auth
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={syncTab} onValueChange={setSyncTab}>
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="status">Status</TabsTrigger>
-                  <TabsTrigger value="connection">Conexão</TabsTrigger>
-                  <TabsTrigger value="mapping">Mapeamento</TabsTrigger>
-                  <TabsTrigger value="transformations">Transformações</TabsTrigger>
-                  <TabsTrigger value="schedule">Agendamento</TabsTrigger>
-                  <TabsTrigger value="logs">Logs</TabsTrigger>
-                </TabsList>
-
-                <div className="mt-6">
-                  <TabsContent value="status" className="mt-0">
-                    <div className="text-center text-muted-foreground py-8">
-                      Use o widget acima para controlar a sincronização
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="connection" className="mt-0">
-                    {config && (
-                      <ConnectionTab
-                        config={config}
-                        onChange={saveConfig}
-                        onSave={saveConfig}
-                        onTest={testConnection}
-                        loading={loading}
-                      />
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="mapping" className="mt-0">
-                    {config && (
-                      <MappingTab
-                        config={config}
-                        onChange={saveConfig}
-                      />
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="transformations" className="mt-0">
-                    {config && (
-                      <TransformationsTab
-                        config={config}
-                        onChange={saveConfig}
-                      />
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="schedule" className="mt-0">
-                    {config && (
-                      <ScheduleTab
-                        config={config}
-                        onChange={saveConfig}
-                      />
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="logs" className="mt-0">
-                    <LogsTab logs={syncLogs} />
-                  </TabsContent>
-                </div>
-              </Tabs>
-            </CardContent>
-          </Card>
+          <HttpSyncConfigSection
+            config={config}
+            syncLogs={syncLogs}
+            loading={loading}
+            saveConfig={saveConfig}
+            testConnection={testConnection}
+          />
         </TabsContent>
       </Tabs>
     </div>
