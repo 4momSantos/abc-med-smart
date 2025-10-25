@@ -117,3 +117,45 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Visual Preferences - Density */
+.density-compact {
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+}
+
+.density-spacious {
+  --spacing-sm: 1.5rem;
+  --spacing-md: 2rem;
+  --spacing-lg: 3rem;
+  --spacing-xl: 4rem;
+}
+
+/* Visual Preferences - High Contrast */
+.high-contrast {
+  --border: 215 30% 60%;
+  --primary: 210 100% 40%;
+  --foreground: 215 30% 5%;
+  --muted-foreground: 215 20% 35%;
+}
+
+.dark.high-contrast {
+  --border: 215 30% 50%;
+  --primary: 210 100% 70%;
+  --foreground: 210 30% 98%;
+  --muted-foreground: 215 20% 75%;
+  --background: 215 30% 8%;
+  --card: 215 30% 10%;
+}
+
+/* Visual Preferences - No Animations */
+.no-animations *,
+.no-animations *::before,
+.no-animations *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0ms !important;
+}
