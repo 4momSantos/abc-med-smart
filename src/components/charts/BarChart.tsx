@@ -1,5 +1,8 @@
 import { MedicineItem } from "@/components/MedicineForm";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ZoomIn, ZoomOut } from "lucide-react";
+import { useState } from "react";
 import Plot from "react-plotly.js";
 
 interface BarChartProps {
@@ -9,7 +12,11 @@ interface BarChartProps {
 }
 
 export const BarChart = ({ items, title = "Top Itens por Valor", topN = 10 }: BarChartProps) => {
+  const [zoomLevel, setZoomLevel] = useState(1);
   const topItems = items.slice(0, topN);
+
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.2, 2));
+  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.2, 0.5));
 
   const data = [
     {
@@ -30,7 +37,29 @@ export const BarChart = ({ items, title = "Top Itens por Valor", topN = 10 }: Ba
 
   return (
     <Card className="p-6 shadow-[var(--shadow-medium)]">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">{title}</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleZoomOut}
+            disabled={zoomLevel <= 0.5}
+            title="Reduzir zoom"
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleZoomIn}
+            disabled={zoomLevel >= 2}
+            title="Aumentar zoom"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
       <Plot
         data={data}
         layout={{
@@ -51,7 +80,7 @@ export const BarChart = ({ items, title = "Top Itens por Valor", topN = 10 }: Ba
           showlegend: false
         }}
         config={{ responsive: true, displayModeBar: false }}
-        style={{ width: "100%", height: "400px" }}
+        style={{ width: "100%", height: `${400 * zoomLevel}px` }}
       />
     </Card>
   );
