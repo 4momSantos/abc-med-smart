@@ -93,6 +93,7 @@ export default function HttpSyncConfigPage() {
         loading={loading}
         error={error}
         configExists={!!config}
+        config={config}
         onStart={startSync}
         onStop={stopSync}
         onSyncNow={syncNow}

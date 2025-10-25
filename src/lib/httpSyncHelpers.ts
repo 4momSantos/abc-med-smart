@@ -50,3 +50,15 @@ export const sanitizeConfig = (config: any): any => {
   }
   return sanitized;
 };
+
+export const isConfigComplete = (config: any): boolean => {
+  return !!(config?.api_url && config?.auth?.username && config?.auth?.password);
+};
+
+export const isConfigValid = (config: any): { valid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+  if (!config?.api_url) errors.push('URL da API é obrigatória');
+  if (!config?.auth?.username) errors.push('Usuário é obrigatório');
+  if (!config?.auth?.password) errors.push('Senha é obrigatória');
+  return { valid: errors.length === 0, errors };
+};

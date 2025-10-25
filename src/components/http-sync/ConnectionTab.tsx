@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { TestTube, Save, Loader2 } from 'lucide-react';
 import { HttpSyncConfig } from '@/types/httpSync';
+import { isConfigValid } from '@/lib/httpSyncHelpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 
 interface ConnectionTabProps {
   config: HttpSyncConfig;
@@ -20,6 +22,8 @@ export const ConnectionTab = ({ config, onChange, onSave, onTest, loading }: Con
   const [testResult, setTestResult] = useState<any>(null);
   const [testing, setTesting] = useState(false);
 
+  const validation = isConfigValid(config);
+
   const handleTest = async () => {
     setTesting(true);
     setTestResult(null);
@@ -29,9 +33,16 @@ export const ConnectionTab = ({ config, onChange, onSave, onTest, loading }: Con
   };
 
   const handleSave = async () => {
+    if (!validation.valid) {
+      toast.error('Configuração incompleta', {
+        description: validation.errors.join(', '),
+      });
+      return;
+    }
+
     const success = await onSave();
     if (success) {
-      alert('Configuração salva com sucesso!');
+      toast.success('Configuração salva com sucesso!');
     }
   };
 
@@ -148,7 +159,7 @@ export const ConnectionTab = ({ config, onChange, onSave, onTest, loading }: Con
         
         <Button
           onClick={handleSave}
-          disabled={loading}
+          disabled={loading || !validation.valid}
         >
           <Save className="mr-2 h-4 w-4" />
           Salvar Configuração

@@ -1,14 +1,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
+import { AlertCircle } from 'lucide-react';
 import { ConnectionTab } from './ConnectionTab';
 import { MappingTab } from './MappingTab';
 import { TransformationsTab } from './TransformationsTab';
 import { ScheduleTab } from './ScheduleTab';
 import { LogsTab } from './LogsTab';
 import { HttpSyncConfig, SyncLog } from '@/types/httpSync';
+import { isConfigComplete } from '@/lib/httpSyncHelpers';
 
 interface HttpSyncConfigSectionProps {
-  config: HttpSyncConfig | null;
+  config: HttpSyncConfig;
   syncLogs: SyncLog[];
   loading: boolean;
   saveConfig: (config: HttpSyncConfig) => Promise<boolean>;
@@ -22,31 +25,25 @@ export function HttpSyncConfigSection({
   saveConfig,
   testConnection,
 }: HttpSyncConfigSectionProps) {
-  if (!config) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Configuração HTTP Sync</CardTitle>
-          <CardDescription>
-            Configure a sincronização automática com APIs externas via HTTP Basic Auth
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center text-muted-foreground py-8">
-            Carregando configuração...
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const configComplete = isConfigComplete(config);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Configuração HTTP Sync</CardTitle>
-        <CardDescription>
-          Configure a sincronização automática com APIs externas via HTTP Basic Auth
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Configuração HTTP Sync</CardTitle>
+            <CardDescription>
+              Configure a sincronização automática com APIs externas via HTTP Basic Auth
+            </CardDescription>
+          </div>
+          {!configComplete && (
+            <Badge variant="outline" className="flex items-center gap-1 border-orange-500 text-orange-500">
+              <AlertCircle className="h-3 w-3" />
+              Configuração Incompleta
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <Accordion type="single" collapsible className="w-full">

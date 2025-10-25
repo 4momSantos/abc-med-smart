@@ -77,17 +77,18 @@ export default function ImportPage() {
         </TabsContent>
 
         <TabsContent value="http-sync" className="mt-6 space-y-6">
-          <StatusWidget
-            status={status}
-            isRunning={isRunning}
-            lastSync={lastSync}
-            loading={loading}
-            error={error}
-            configExists={!!config}
-            onStart={startSync}
-            onStop={stopSync}
-            onSyncNow={syncNow}
-          />
+            <StatusWidget
+              status={status}
+              isRunning={isRunning}
+              lastSync={lastSync}
+              loading={loading}
+              error={error}
+              configExists={!!config}
+              config={config}
+              onStart={startSync}
+              onStop={stopSync}
+              onSyncNow={syncNow}
+            />
 
           <HttpSyncConfigSection
             config={config}

@@ -1,8 +1,9 @@
 import { Play, Pause, RefreshCw, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
-import { SyncStatus } from '@/types/httpSync';
-import { formatDuration, formatInterval, getNextSyncCountdown } from '@/lib/httpSyncHelpers';
+import { SyncStatus, HttpSyncConfig } from '@/types/httpSync';
+import { formatDuration, formatInterval, getNextSyncCountdown, isConfigComplete } from '@/lib/httpSyncHelpers';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface StatusWidgetProps {
   status: SyncStatus | null;
@@ -11,6 +12,7 @@ interface StatusWidgetProps {
   loading: boolean;
   error: string | null;
   configExists: boolean;
+  config?: HttpSyncConfig;
   onStart: () => void;
   onStop: () => void;
   onSyncNow: () => void;
@@ -23,6 +25,7 @@ export const StatusWidget = ({
   loading,
   error,
   configExists,
+  config,
   onStart,
   onStop,
   onSyncNow,
@@ -31,41 +34,67 @@ export const StatusWidget = ({
     ? ((status.stats.successful_syncs / status.stats.total_syncs) * 100).toFixed(1)
     : '0';
 
+  const configComplete = config ? isConfigComplete(config) : false;
+  const canSync = configExists && configComplete;
+
   return (
-    <div className="bg-card rounded-lg shadow-lg p-6 mb-6 border">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Status da Sincronização</h2>
-        <div className="flex gap-2">
-          {isRunning ? (
-            <Button
-              onClick={onStop}
-              variant="destructive"
-              size="sm"
-            >
-              <Pause className="mr-2 h-4 w-4" />
-              Pausar
-            </Button>
-          ) : (
-            <Button
-              onClick={onStart}
-              disabled={!configExists}
-              size="sm"
-            >
-              <Play className="mr-2 h-4 w-4" />
-              Iniciar
-            </Button>
-          )}
-          <Button
-            onClick={onSyncNow}
-            disabled={loading || !configExists}
-            variant="outline"
-            size="sm"
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Sincronizar Agora
-          </Button>
+    <TooltipProvider>
+      <div className="bg-card rounded-lg shadow-lg p-6 mb-6 border">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Status da Sincronização</h2>
+          <div className="flex gap-2">
+            {isRunning ? (
+              <Button
+                onClick={onStop}
+                variant="destructive"
+                size="sm"
+              >
+                <Pause className="mr-2 h-4 w-4" />
+                Pausar
+              </Button>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Button
+                      onClick={onStart}
+                      disabled={!canSync}
+                      size="sm"
+                    >
+                      <Play className="mr-2 h-4 w-4" />
+                      Iniciar
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                {!canSync && (
+                  <TooltipContent>
+                    <p>Preencha os campos obrigatórios: URL, Usuário e Senha</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button
+                    onClick={onSyncNow}
+                    disabled={loading || !canSync}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    Sincronizar Agora
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              {!canSync && (
+                <TooltipContent>
+                  <p>Preencha os campos obrigatórios: URL, Usuário e Senha</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </div>
         </div>
-      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Status */}
@@ -136,6 +165,7 @@ export const StatusWidget = ({
           </AlertDescription>
         </Alert>
       )}
-    </div>
+      </div>
+    </TooltipProvider>
   );
 };

@@ -1,10 +1,41 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import HttpBasicSyncService from '@/services/httpBasicSyncService';
 import { HttpSyncConfig, SyncStatus, SyncLog } from '@/types/httpSync';
-import { encryptPassword } from '@/lib/httpSyncHelpers';
+import { encryptPassword, isConfigComplete } from '@/lib/httpSyncHelpers';
+
+const DEFAULT_HTTP_SYNC_CONFIG: HttpSyncConfig = {
+  api_url: '',
+  method: 'GET',
+  auth: { username: '', password: '' },
+  timeout_ms: 30000,
+  sync_interval: 300000,
+  data_mapping: {
+    root_path: '',
+    fields: {
+      codigo: 'id',
+      nome: 'name',
+      quantidade: 'quantity',
+      preco: 'price',
+      unidade: 'unit',
+      categoria: 'category',
+      lote: 'batch',
+      data_validade: 'expiry_date',
+      fornecedor: 'supplier',
+    },
+  },
+  transformations: [],
+  options: {
+    auto_start: false,
+    retry_on_error: true,
+    max_retries: 3,
+    log_requests: true,
+    notify_on_error: true,
+    notify_on_success: false,
+  },
+};
 
 export const useHttpSync = () => {
-  const [config, setConfig] = useState<HttpSyncConfig | null>(null);
+  const [config, setConfig] = useState<HttpSyncConfig>(DEFAULT_HTTP_SYNC_CONFIG);
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
@@ -44,14 +75,19 @@ export const useHttpSync = () => {
         const configData = JSON.parse(savedConfig);
         setConfig(configData);
         
-        // Inicializar serviço
-        syncServiceRef.current = new HttpBasicSyncService(configData);
-        syncServiceRef.current.setCallbacks(updateStatus, loadLogs);
-        
-        // Auto-start se configurado
-        if (configData.options?.auto_start) {
-          setTimeout(() => startSync(), 500);
+        // Só inicializar serviço se config estiver completa
+        if (isConfigComplete(configData)) {
+          syncServiceRef.current = new HttpBasicSyncService(configData);
+          syncServiceRef.current.setCallbacks(updateStatus, loadLogs);
+          
+          // Auto-start se configurado
+          if (configData.options?.auto_start) {
+            setTimeout(() => startSync(), 500);
+          }
         }
+      } else {
+        // Configuração inicial vazia
+        setConfig(DEFAULT_HTTP_SYNC_CONFIG);
       }
     } catch (err: any) {
       console.error('Erro ao carregar configuração:', err);
@@ -96,13 +132,15 @@ export const useHttpSync = () => {
       localStorage.setItem('http_sync_config', JSON.stringify(configToSave));
       setConfig(configToSave);
       
-      // Reinicializar serviço
+      // Reinicializar serviço apenas se config estiver completa
       if (syncServiceRef.current) {
         syncServiceRef.current.stop();
       }
       
-      syncServiceRef.current = new HttpBasicSyncService(configToSave);
-      syncServiceRef.current.setCallbacks(updateStatus, loadLogs);
+      if (isConfigComplete(configToSave)) {
+        syncServiceRef.current = new HttpBasicSyncService(configToSave);
+        syncServiceRef.current.setCallbacks(updateStatus, loadLogs);
+      }
       
       setLoading(false);
       return true;
@@ -239,7 +277,7 @@ export const useHttpSync = () => {
       
       localStorage.removeItem('http_sync_config');
       
-      setConfig(null);
+      setConfig(DEFAULT_HTTP_SYNC_CONFIG);
       setStatus(null);
       setIsRunning(false);
       
