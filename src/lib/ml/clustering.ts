@@ -1,4 +1,4 @@
-import { MedicineItem } from "@/components/MedicineForm";
+import { MedicineItem } from "@/types/medicine";
 import { ClusterResult, ClusteringSummary } from "@/types/ml";
 
 export class KMeansClustering {
@@ -70,16 +70,33 @@ export class KMeansClustering {
   private extractFeatures(items: MedicineItem[]): number[][] {
     const maxValue = Math.max(...items.map(i => i.totalValue), 1);
     const maxQty = Math.max(...items.map(i => i.quantity), 1);
+    const maxLeadTime = Math.max(...items.map(i => i.leadTime || 0), 1);
+    const maxVolatility = Math.max(...items.map(i => i.volatility || 0), 1);
     
     return items.map(item => {
       const criticalityScore = 
         item.clinicalCriticality === 'alta' ? 1 : 
         item.clinicalCriticality === 'média' ? 0.5 : 0;
       
+      // Converter categoria em número (hash simples)
+      const categoryScore = item.category 
+        ? (item.category.charCodeAt(0) % 10) / 10 
+        : 0.5;
+      
+      // Converter fornecedor em número
+      const supplierScore = item.supplier 
+        ? (item.supplier.charCodeAt(0) % 10) / 10 
+        : 0.5;
+      
       return [
         item.totalValue / maxValue,
         item.quantity / maxQty,
-        criticalityScore
+        criticalityScore,
+        (item.leadTime || 0) / maxLeadTime,
+        (item.volatility || 0) / maxVolatility,
+        categoryScore,
+        supplierScore,
+        item.stockoutRate || 0
       ];
     });
   }
@@ -129,7 +146,8 @@ export class KMeansClustering {
   }
   
   private updateCentroids(features: number[][], assignments: number[], k: number) {
-    const newCentroids: number[][] = Array(k).fill(null).map(() => [0, 0, 0]);
+    const featureDim = features[0]?.length || 8;
+    const newCentroids: number[][] = Array(k).fill(null).map(() => Array(featureDim).fill(0));
     const counts = Array(k).fill(0);
     
     features.forEach((feature, idx) => {
