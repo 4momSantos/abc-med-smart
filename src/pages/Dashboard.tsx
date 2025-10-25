@@ -100,6 +100,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartWidget
           items={filteredItems}
+          chartLibrary="value-analysis"
           defaultChartId="pareto"
           enableComparison
           onCompare={(items) => console.log('Comparar:', items)}
@@ -107,6 +108,7 @@ export default function Dashboard() {
 
         <ChartWidget
           items={filteredItems}
+          chartLibrary="distribution-patterns"
           defaultChartId="pie"
           enableComparison
           onCompare={(items) => console.log('Comparar:', items)}

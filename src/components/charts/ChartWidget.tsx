@@ -9,6 +9,12 @@ import { LineChart } from "./LineChart";
 import { ScatterChart } from "./ScatterChart";
 import { HeatmapChart } from "./HeatmapChart";
 import { ABCChart } from "../ABCChart";
+import { FunnelChart } from "./FunnelChart";
+import { BoxPlotChart } from "./BoxPlotChart";
+import { RadarChart } from "./RadarChart";
+import { AreaChart } from "./AreaChart";
+import { TreemapChart } from "./TreemapChart";
+import { SunburstChart } from "./SunburstChart";
 
 interface ChartType {
   id: string;
@@ -16,17 +22,27 @@ interface ChartType {
   component: React.ComponentType<{ items: MedicineItem[]; title?: string }>;
 }
 
-const chartTypes: ChartType[] = [
+const valueAnalysisCharts: ChartType[] = [
   { id: "pareto", name: "Curva de Pareto", component: ABCChart },
-  { id: "pie", name: "Distribuição por Classe", component: PieChart },
-  { id: "bar", name: "Top Itens por Valor", component: BarChart },
+  { id: "funnel", name: "Funil de Classificação", component: FunnelChart },
   { id: "line", name: "Curva de Valor Acumulado", component: LineChart },
+  { id: "area", name: "Área Acumulada", component: AreaChart },
+  { id: "treemap", name: "Hierarquia de Valor", component: TreemapChart },
+  { id: "bar", name: "Top Itens por Valor", component: BarChart },
+];
+
+const distributionPatternsCharts: ChartType[] = [
+  { id: "pie", name: "Distribuição por Classe", component: PieChart },
   { id: "scatter", name: "Dispersão Quantidade/Preço", component: ScatterChart },
   { id: "heatmap", name: "Mapa de Calor", component: HeatmapChart },
+  { id: "boxplot", name: "Distribuição de Preços", component: BoxPlotChart },
+  { id: "radar", name: "Perfil Multidimensional", component: RadarChart },
+  { id: "sunburst", name: "Hierarquia Circular", component: SunburstChart },
 ];
 
 interface ChartWidgetProps {
   items: MedicineItem[];
+  chartLibrary: "value-analysis" | "distribution-patterns";
   defaultChartId?: string;
   enableComparison?: boolean;
   onCompare?: (items: MedicineItem[]) => void;
@@ -34,13 +50,18 @@ interface ChartWidgetProps {
 
 export const ChartWidget = ({
   items,
-  defaultChartId = "pareto",
+  chartLibrary,
+  defaultChartId,
   enableComparison = false,
   onCompare,
 }: ChartWidgetProps) => {
-  const [currentIndex, setCurrentIndex] = useState(
-    chartTypes.findIndex((c) => c.id === defaultChartId) || 0
-  );
+  const chartTypes = chartLibrary === "value-analysis" ? valueAnalysisCharts : distributionPatternsCharts;
+  
+  const defaultIndex = defaultChartId 
+    ? chartTypes.findIndex((c) => c.id === defaultChartId)
+    : 0;
+  
+  const [currentIndex, setCurrentIndex] = useState(defaultIndex >= 0 ? defaultIndex : 0);
   const [selectedItems, setSelectedItems] = useState<MedicineItem[]>([]);
 
   const currentChart = chartTypes[currentIndex];
@@ -133,7 +154,7 @@ export const ChartWidget = ({
         </div>
 
         <div className="text-xs text-muted-foreground mt-2">
-          {currentIndex + 1} de {chartTypes.length} visualizações disponíveis
+          {currentIndex + 1} de {chartTypes.length} visualizações • {chartLibrary === "value-analysis" ? "Análise de Valor" : "Distribuição e Padrões"}
         </div>
       </CardHeader>
 
