@@ -209,12 +209,12 @@ export default function SearchPage() {
 
           <Card>
             <CardContent className="pt-6">
-              <ABCTable
-                items={filteredItems}
-                onDelete={() => {}}
-                abcConfig={abcConfig}
-                period={period}
-              />
+          <ABCTable 
+            items={filteredItems} 
+            onDeleteItem={() => {}}
+            abcConfig={abcConfig}
+            period={period}
+          />
             </CardContent>
           </Card>
         </div>

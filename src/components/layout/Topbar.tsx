@@ -76,6 +76,5 @@ export const Topbar = () => {
         </Button>
       </div>
     </header>
-    </>
   );
 };
