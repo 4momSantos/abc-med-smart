@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { Organization, OrgRole } from '@/types/organization';
 
 type UserRole = 'admin' | 'manager' | 'viewer';
 
@@ -9,11 +10,14 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   userRole: UserRole | null;
+  currentOrganization: Organization | null;
+  organizationRole: OrgRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshRole: () => Promise<void>;
+  refreshOrganization: () => Promise<void>;
   hasRole: (role: UserRole) => boolean;
   isAdmin: () => boolean;
   isManager: () => boolean;
@@ -25,6 +29,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
+  const [organizationRole, setOrganizationRole] = useState<OrgRole | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Fetch user role from database
@@ -44,6 +50,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Fetch user's active organization
+  const fetchOrganization = async (userId: string) => {
+    try {
+      // Get user's active organization
+      const { data: orgId, error: orgError } = await supabase
+        .rpc('get_user_active_org', { _user_id: userId });
+
+      if (orgError || !orgId) {
+        console.error('Error fetching active organization:', orgError);
+        setCurrentOrganization(null);
+        setOrganizationRole(null);
+        return;
+      }
+
+      // Get organization details
+      const { data: org, error: orgDetailsError } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', orgId)
+        .single();
+
+      if (orgDetailsError) {
+        console.error('Error fetching organization details:', orgDetailsError);
+        setCurrentOrganization(null);
+        setOrganizationRole(null);
+        return;
+      }
+
+      setCurrentOrganization(org as Organization);
+
+      // Get user's role in this organization
+      const { data: member, error: memberError } = await supabase
+        .from('organization_members')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('organization_id', orgId)
+        .eq('is_active', true)
+        .single();
+
+      if (memberError) {
+        console.error('Error fetching organization role:', memberError);
+        setOrganizationRole(null);
+        return;
+      }
+
+      setOrganizationRole(member.role as OrgRole);
+    } catch (error) {
+      console.error('Error in fetchOrganization:', error);
+      setCurrentOrganization(null);
+      setOrganizationRole(null);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -51,13 +110,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer role fetch with setTimeout to avoid deadlock
+        // Defer role and org fetch with setTimeout to avoid deadlock
         if (session?.user) {
           setTimeout(() => {
             fetchUserRole(session.user.id);
+            fetchOrganization(session.user.id);
           }, 0);
         } else {
           setUserRole(null);
+          setCurrentOrganization(null);
+          setOrganizationRole(null);
         }
       }
     );
@@ -70,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         setTimeout(() => {
           fetchUserRole(session.user.id);
+          fetchOrganization(session.user.id);
         }, 0);
       }
       setLoading(false);
@@ -128,6 +191,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setSession(null);
       setUserRole(null);
+      setCurrentOrganization(null);
+      setOrganizationRole(null);
       
       // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
@@ -153,6 +218,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshOrganization = async () => {
+    const currentUser = user;
+    if (currentUser) {
+      await fetchOrganization(currentUser.id);
+    }
+  };
+
   const hasRole = (role: UserRole): boolean => {
     if (!userRole) return false;
     
@@ -172,11 +244,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     userRole,
+    currentOrganization,
+    organizationRole,
     loading,
     signIn,
     signUp,
     signOut,
     refreshRole,
+    refreshOrganization,
     hasRole,
     isAdmin,
     isManager,

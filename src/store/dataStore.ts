@@ -146,11 +146,18 @@ export const useDataStore = create<DataState>((set, get) => ({
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('User not authenticated');
 
+      // Get user's active organization
+      const { data: orgId } = await supabase
+        .rpc('get_user_active_org', { _user_id: userData.user.id });
+
+      if (!orgId) throw new Error('No active organization');
+
       const { data, error } = await supabase
         .from('medicines')
         .insert([{
           ...item,
           user_id: userData.user.id,
+          organization_id: orgId,
           unit_price: item.unitPrice,
           total_value: item.totalValue,
           expiration_date: item.expirationDate?.toISOString().split('T')[0],

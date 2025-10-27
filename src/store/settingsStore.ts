@@ -86,11 +86,18 @@ export const useSettingsStore = create<SettingsState>()(
               },
             });
           } else {
+            // Get user's active organization
+            const { data: orgId } = await supabase
+              .rpc('get_user_active_org', { _user_id: userData.user.id });
+
+            if (!orgId) throw new Error('No active organization');
+
             // Create default config for user
             const { error: insertError } = await supabase
               .from('abc_configurations')
               .insert([{
                 user_id: userData.user.id,
+                organization_id: orgId,
                 class_a_threshold: defaultABCConfig.classAThreshold,
                 class_b_threshold: defaultABCConfig.classBThreshold,
               }]);
@@ -113,13 +120,22 @@ export const useSettingsStore = create<SettingsState>()(
           const { data: userData } = await supabase.auth.getUser();
           if (!userData.user) throw new Error('User not authenticated');
 
+          // Get user's active organization
+          const { data: orgId } = await supabase
+            .rpc('get_user_active_org', { _user_id: userData.user.id });
+
+          if (!orgId) throw new Error('No active organization');
+
           const { error } = await supabase
             .from('abc_configurations')
-            .update({
+            .upsert({
+              user_id: userData.user.id,
+              organization_id: orgId,
               class_a_threshold: newConfig.classAThreshold,
               class_b_threshold: newConfig.classBThreshold,
             })
-            .eq('user_id', userData.user.id);
+            .eq('user_id', userData.user.id)
+            .eq('organization_id', orgId);
 
           if (error) throw error;
 

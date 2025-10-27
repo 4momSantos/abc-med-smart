@@ -87,11 +87,18 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('User not authenticated');
 
+      // Get user's active organization
+      const { data: orgId } = await supabase
+        .rpc('get_user_active_org', { _user_id: userData.user.id });
+
+      if (!orgId) throw new Error('No active organization');
+
       const { data, error } = await supabase
         .from('dashboard_layouts')
         .insert([
           {
             user_id: userData.user.id,
+            organization_id: orgId,
             name,
             widgets: widgets as any,
           },

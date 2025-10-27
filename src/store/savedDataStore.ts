@@ -97,11 +97,18 @@ export const useSavedDataStore = create<SavedDataState>((set, get) => ({
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('User not authenticated');
 
+      // Get user's active organization
+      const { data: orgId } = await supabase
+        .rpc('get_user_active_org', { _user_id: userData.user.id });
+
+      if (!orgId) throw new Error('No active organization');
+
       const { data, error } = await supabase
         .from('saved_datasets')
         .insert([
           {
             user_id: userData.user.id,
+            organization_id: orgId,
             name: dataset.name,
             file_name: dataset.fileName,
             record_count: dataset.recordCount,
@@ -247,11 +254,18 @@ export const useSavedDataStore = create<SavedDataState>((set, get) => ({
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('User not authenticated');
 
+      // Get user's active organization
+      const { data: orgId } = await supabase
+        .rpc('get_user_active_org', { _user_id: userData.user.id });
+
+      if (!orgId) throw new Error('No active organization');
+
       const { data, error } = await supabase
         .from('analysis_history')
         .insert([
           {
             user_id: userData.user.id,
+            organization_id: orgId,
             type: history.type,
             item_count: history.itemCount,
             results: history.results,
