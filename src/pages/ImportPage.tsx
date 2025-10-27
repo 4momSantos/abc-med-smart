@@ -30,8 +30,25 @@ export default function ImportPage() {
   } = useHttpSync();
 
   const handleImportComplete = (items: any[]) => {
-    setItems(items);
-    navigate('/');
+    try {
+      setItems(items);
+      navigate('/');
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        const itemCount = items.length;
+        const message = itemCount > 10000 
+          ? `O arquivo possui ${itemCount.toLocaleString()} itens e excede o limite de armazenamento local (~5MB). Considere usar sincronização HTTP ou importar arquivos menores.`
+          : `O armazenamento local está cheio. Por favor, limpe dados antigos ou use arquivos menores.`;
+        
+        if (confirm(`${message}\n\nDeseja limpar os dados antigos e tentar novamente?`)) {
+          localStorage.clear();
+          window.location.reload();
+        }
+      } else {
+        console.error('Erro ao importar dados:', error);
+        alert('Erro ao importar dados. Por favor, tente novamente.');
+      }
+    }
   };
 
   return (

@@ -74,10 +74,34 @@ export const useSettingsStore = create<SettingsState>()(
       name: 'settings-storage',
       onRehydrateStorage: () => (state) => {
         if (state?.period) {
-          state.period = {
-            startDate: new Date(state.period.startDate),
-            endDate: new Date(state.period.endDate),
-          };
+          try {
+            const startDate = state.period.startDate instanceof Date 
+              ? state.period.startDate 
+              : new Date(state.period.startDate);
+            
+            const endDate = state.period.endDate instanceof Date 
+              ? state.period.endDate 
+              : new Date(state.period.endDate);
+            
+            // Validar se as datas são válidas
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+              // Fallback para datas padrão do ano atual
+              const now = new Date();
+              state.period = {
+                startDate: new Date(now.getFullYear(), 0, 1),
+                endDate: now,
+              };
+            } else {
+              state.period = { startDate, endDate };
+            }
+          } catch (error) {
+            // Em caso de erro, usar datas padrão do ano atual
+            const now = new Date();
+            state.period = {
+              startDate: new Date(now.getFullYear(), 0, 1),
+              endDate: now,
+            };
+          }
         }
       },
     }
