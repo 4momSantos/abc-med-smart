@@ -5,9 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { OrganizationMembersList } from './OrganizationMembersList';
 import { InviteMemberDialog } from './InviteMemberDialog';
+import { OrganizationMembersList } from './OrganizationMembersList';
 import { CreateOrganizationDialog } from './CreateOrganizationDialog';
+import { PendingInvitationsList } from './PendingInvitationsList';
 
 const roleLabels = {
   org_admin: 'Administrador',
@@ -119,6 +120,9 @@ export function OrganizationSettings() {
           <OrganizationMembersList />
         </CardContent>
       </Card>
+
+      {/* Convites Pendentes */}
+      {canManageMembers && <PendingInvitationsList />}
 
       {/* Criar Nova Organização */}
       {canCreateOrg && (

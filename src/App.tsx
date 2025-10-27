@@ -21,6 +21,7 @@ import SavedDataPage from "./pages/SavedDataPage";
 import HelpPage from "./pages/HelpPage";
 import FieldsDocPage from "./pages/FieldsDocPage";
 import AuthPage from "./pages/AuthPage";
+import AcceptInvitePage from "./pages/AcceptInvitePage";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useSettingsStore } from "./store/settingsStore";
@@ -40,6 +41,7 @@ const AppContent = () => {
       <ErrorBoundary>
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/accept-invite" element={<AcceptInvitePage />} />
           <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Dashboard />} />
             <Route path="import" element={<ProtectedRoute requiredRole="manager"><ImportPage /></ProtectedRoute>} />

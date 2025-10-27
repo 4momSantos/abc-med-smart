@@ -156,14 +156,25 @@ export const useOrganizationStore = create<OrganizationState>((set, get) => ({
         return;
       }
 
-      // This would typically send an invitation email
-      // For now, we'll just show a success message
-      toast.info('Funcionalidade de convite em desenvolvimento');
-      
-      // TODO: Implement invitation system with edge function
-    } catch (error) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      // Chamar edge function
+      const { data, error } = await supabase.functions.invoke('send-organization-invite', {
+        body: {
+          email,
+          organizationId: currentOrganization.id,
+          role,
+          invitedBy: user.id
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success('Convite enviado com sucesso!');
+    } catch (error: any) {
       console.error('Error inviting member:', error);
-      toast.error('Erro ao convidar membro');
+      toast.error('Erro ao enviar convite: ' + (error.message || 'Erro desconhecido'));
     }
   },
 
