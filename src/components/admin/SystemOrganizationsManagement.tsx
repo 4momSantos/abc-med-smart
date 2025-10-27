@@ -116,20 +116,30 @@ export function SystemOrganizationsManagement() {
 
   const fetchMembers = async (orgId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: membersData, error: membersError } = await supabase
         .from('organization_members')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name
-          )
-        `)
+        .select('*')
         .eq('organization_id', orgId)
         .eq('is_active', true);
 
-      if (error) throw error;
+      if (membersError) throw membersError;
 
-      setMembers(data as OrganizationMemberWithProfile[]);
+      // Fetch profiles separately
+      const userIds = membersData.map(m => m.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine data
+      const membersWithProfiles = membersData.map(member => ({
+        ...member,
+        profiles: profilesData.find(p => p.id === member.user_id)
+      }));
+
+      setMembers(membersWithProfiles as OrganizationMemberWithProfile[]);
     } catch (error) {
       console.error('Error fetching members:', error);
       toast.error('Erro ao carregar membros');
