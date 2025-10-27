@@ -1,5 +1,6 @@
 import { MedicineItem } from "@/types/medicine";
-import { ColumnMapping, ValidationError, ProcessedData } from "@/types/abc";
+import { ColumnMapping, ValidationError, ProcessedData, ABCConfiguration } from "@/types/abc";
+import { calculateABCClassification } from "./abcCalculator";
 
 export const cleanNumericValue = (value: any): number => {
   if (typeof value === "number") return value;
@@ -241,7 +242,8 @@ export const validateRow = (
 
 export const processImportedData = (
   rows: any[][],
-  mapping: ColumnMapping
+  mapping: ColumnMapping,
+  config?: ABCConfiguration
 ): ProcessedData => {
   const validItems: MedicineItem[] = [];
   const errors: ValidationError[] = [];
@@ -254,9 +256,6 @@ export const processImportedData = (
         ...validation.data as MedicineItem,
         id: `imported-${Date.now()}-${index}`,
         totalValue: (validation.data.quantity || 0) * (validation.data.unitPrice || 0),
-        percentage: 0,
-        accumulatedPercentage: 0,
-        classification: "C",
       });
     } else {
       errors.push({
@@ -266,5 +265,21 @@ export const processImportedData = (
     }
   });
 
-  return { validItems, errors };
+  // Calcular classificação ABC se config fornecida
+  if (config && validItems.length > 0) {
+    const classifiedItems = calculateABCClassification(validItems, config);
+    return { validItems: classifiedItems, errors };
+  }
+
+  // Se não houver config, retornar com classificação C padrão
+  const itemsWithDefaultClassification = validItems.map(item => ({
+    ...item,
+    percentage: 0,
+    accumulatedPercentage: 0,
+    cumulativePercentage: 0,
+    valuePercentage: 0,
+    classification: "C" as const,
+  }));
+
+  return { validItems: itemsWithDefaultClassification, errors };
 };

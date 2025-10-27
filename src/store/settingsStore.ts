@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ABCConfiguration, AnalysisPeriod } from '@/types/abc';
+import { useDataStore } from './dataStore';
 
 export interface VisualPreferences {
   primaryColor: string;
@@ -52,10 +53,18 @@ export const useSettingsStore = create<SettingsState>()(
       decimalPlaces: 2,
       visualPreferences: defaultVisualPreferences,
       
-      updateABCConfig: (config) =>
-        set((state) => ({
-          abcConfig: { ...state.abcConfig, ...config },
-        })),
+      updateABCConfig: (config) => {
+        set((state) => {
+          const newConfig = { ...state.abcConfig, ...config };
+          
+          // Recalcular ABC em todos os itens do dataStore
+          setTimeout(() => {
+            useDataStore.getState().recalculateABC(newConfig);
+          }, 0);
+          
+          return { abcConfig: newConfig };
+        });
+      },
       
       setPeriod: (period) => set({ period }),
       setLocale: (locale) => set({ locale }),

@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { MedicineItem } from '@/types/medicine';
+import { ABCConfiguration } from '@/types/abc';
+import { recalculateABCInPlace } from '@/lib/abcCalculator';
 
 interface FilterConfig {
   classABC?: ('A' | 'B' | 'C')[];
@@ -25,6 +27,7 @@ interface DataState {
   setActiveFilters: (filters: FilterConfig) => void;
   applyFilters: () => void;
   clearFilters: () => void;
+  recalculateABC: (config: ABCConfiguration) => void;
 }
 
 export const useDataStore = create<DataState>()(
@@ -155,6 +158,15 @@ export const useDataStore = create<DataState>()(
       
       clearFilters: () => {
         set({ activeFilters: {}, filteredItems: get().items });
+      },
+      
+      recalculateABC: (config) => {
+        const { items } = get();
+        if (items.length === 0) return;
+        
+        const recalculatedItems = recalculateABCInPlace(items, config);
+        set({ items: recalculatedItems, filteredItems: recalculatedItems });
+        get().applyFilters();
       },
     }),
     {

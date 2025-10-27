@@ -70,7 +70,7 @@ export const ImportWizard = ({
   const handleConfirmImport = () => {
     if (!importedData || !isMappingValid) return;
 
-    const result = processImportedData(importedData.rows, columnMapping as ColumnMapping);
+    const result = processImportedData(importedData.rows, columnMapping as ColumnMapping, abcConfig);
 
     if (result.validItems.length === 0) {
       toast({
@@ -90,7 +90,7 @@ export const ImportWizard = ({
   };
 
   const processedResult = importedData && isMappingValid 
-    ? processImportedData(importedData.rows, columnMapping as ColumnMapping)
+    ? processImportedData(importedData.rows, columnMapping as ColumnMapping, abcConfig)
     : null;
 
   return (
