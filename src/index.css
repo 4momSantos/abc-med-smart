@@ -8,6 +8,9 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* ========================================
+       INTERFACE COLORS (Customizable by user)
+       ======================================== */
     --background: 210 25% 98%;
     --foreground: 215 25% 15%;
 
@@ -38,6 +41,11 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
+    /* ========================================
+       DATA VISUALIZATION COLORS (Fixed palette)
+       NEVER override these with user preferences!
+       ======================================== */
+    
     /* ABC Classification Colors */
     --class-a: 142 71% 45%;
     --class-a-foreground: 0 0% 100%;
@@ -85,6 +93,9 @@ All colors MUST be HSL.
   }
 
   .dark {
+    /* ========================================
+       INTERFACE COLORS (Customizable by user)
+       ======================================== */
     --background: 215 25% 12%;
     --foreground: 210 25% 95%;
 
@@ -113,6 +124,9 @@ All colors MUST be HSL.
     --input: 215 20% 25%;
     --ring: 210 100% 55%;
 
+    /* ========================================
+       DATA VISUALIZATION COLORS (Fixed palette)
+       ======================================== */
     --class-a: 142 70% 50%;
     --class-a-light: 142 30% 20%;
 

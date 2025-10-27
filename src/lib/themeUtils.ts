@@ -3,11 +3,14 @@ import { VisualPreferences } from '@/store/settingsStore';
 export function applyVisualPreferences(preferences: VisualPreferences) {
   const root = document.documentElement;
 
-  // Apply primary color
+  // CRITICAL: Only modify interface colors, NEVER touch data visualization colors
+  // (--chart-X, --class-X, --expired, --valid, etc.)
+  
+  // Apply primary color (buttons, links, focus states)
   root.style.setProperty('--primary', preferences.primaryColor);
   root.style.setProperty('--ring', preferences.primaryColor);
   
-  // Apply accent color
+  // Apply accent color (highlights, badges)
   root.style.setProperty('--accent', preferences.accentColor);
 
   // Apply border-radius
