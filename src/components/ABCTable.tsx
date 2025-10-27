@@ -47,7 +47,8 @@ export const ABCTable = ({ items, onDeleteItem, abcConfig, period }: ABCTablePro
     }).format(value);
   };
 
-  const formatPercentage = (value: number) => {
+  const formatPercentage = (value: number | null | undefined) => {
+    if (value === null || value === undefined) return '0.00%';
     return `${value.toFixed(2)}%`;
   };
 

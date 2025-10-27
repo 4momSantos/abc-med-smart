@@ -117,14 +117,60 @@ export const useDataStore = create<DataState>((set, get) => ({
 
       if (error) throw error;
 
-      const items = (data || []).map((item) => ({
-        ...item,
-        unitPrice: Number(item.unit_price),
-        totalValue: Number(item.total_value),
-        expirationDate: item.expiration_date ? new Date(item.expiration_date) : undefined,
-        movementDate: item.movement_date ? new Date(item.movement_date) : undefined,
-        lastPurchaseDate: item.last_purchase_date ? new Date(item.last_purchase_date) : undefined,
-      })) as MedicineItem[];
+      // Desempacotar estrutura híbrida (campos principais + extra_data JSONB)
+      const items = (data || []).map((row) => {
+        const extra = (row.extra_data as any) || {};
+        return {
+          id: row.id,
+          code: row.code,
+          name: row.name,
+          quantity: Number(row.quantity),
+          unitPrice: Number(row.unit_price),
+          totalValue: Number(row.total_value),
+          classification: row.classification as 'A' | 'B' | 'C',
+          // Desempacotar extra_data
+          unit: extra.unit,
+          category: extra.category,
+          subcategory: extra.subcategory,
+          supplier: extra.supplier,
+          batch: extra.batch,
+          expirationDate: extra.expiration_date ? new Date(extra.expiration_date) : undefined,
+          percentage: extra.percentage,
+          accumulatedPercentage: extra.accumulated_percentage,
+          cumulativePercentage: extra.cumulative_percentage,
+          valuePercentage: extra.value_percentage,
+          clinicalCriticality: extra.clinical_criticality,
+          requestingSector: extra.requesting_sector,
+          leadTime: extra.lead_time,
+          minStock: extra.min_stock,
+          currentStock: extra.current_stock,
+          reorderPoint: extra.reorder_point,
+          totalCost: extra.total_cost,
+          stockValue: extra.stock_value,
+          profitMargin: extra.profit_margin,
+          discount: extra.discount,
+          tax: extra.tax,
+          movementDate: extra.movement_date ? new Date(extra.movement_date) : undefined,
+          month: extra.month,
+          year: extra.year,
+          lastPurchaseDate: extra.last_purchase_date ? new Date(extra.last_purchase_date) : undefined,
+          consumptionFrequency: extra.consumption_frequency,
+          therapeuticIndication: extra.therapeutic_indication,
+          activeIngredient: extra.active_ingredient,
+          administrationRoute: extra.administration_route,
+          specialControl: extra.special_control,
+          storageTemperature: extra.storage_temperature,
+          seasonality: extra.seasonality,
+          trend: extra.trend,
+          volatility: extra.volatility,
+          stockoutRate: extra.stockout_rate,
+          costCenter: extra.cost_center,
+          movementType: extra.movement_type,
+          invoiceNumber: extra.invoice_number,
+          responsible: extra.responsible,
+          needsReorder: extra.needs_reorder,
+        } as MedicineItem;
+      });
 
       set({ items, filteredItems: items });
       get().applyFilters();
@@ -155,27 +201,75 @@ export const useDataStore = create<DataState>((set, get) => ({
       const { data, error } = await supabase
         .from('medicines')
         .insert([{
-          ...item,
-          user_id: userData.user.id,
-          organization_id: orgId,
+          code: item.code,
+          name: item.name,
+          quantity: item.quantity,
           unit_price: item.unitPrice,
           total_value: item.totalValue,
-          expiration_date: item.expirationDate?.toISOString().split('T')[0],
-          movement_date: item.movementDate?.toISOString(),
-          last_purchase_date: item.lastPurchaseDate?.toISOString().split('T')[0],
+          classification: item.classification,
+          user_id: userData.user.id,
+          organization_id: orgId,
+          extra_data: {
+            unit: item.unit,
+            category: item.category,
+            subcategory: item.subcategory,
+            supplier: item.supplier,
+            batch: item.batch,
+            expiration_date: item.expirationDate?.toISOString().split('T')[0],
+            percentage: item.percentage,
+            accumulated_percentage: item.accumulatedPercentage,
+            cumulative_percentage: item.cumulativePercentage,
+            value_percentage: item.valuePercentage,
+            clinical_criticality: item.clinicalCriticality,
+            requesting_sector: item.requestingSector,
+            lead_time: item.leadTime,
+            min_stock: item.minStock,
+            current_stock: item.currentStock,
+            reorder_point: item.reorderPoint,
+            total_cost: item.totalCost,
+            stock_value: item.stockValue,
+            profit_margin: item.profitMargin,
+            discount: item.discount,
+            tax: item.tax,
+            movement_date: item.movementDate?.toISOString(),
+            month: item.month,
+            year: item.year,
+            last_purchase_date: item.lastPurchaseDate?.toISOString().split('T')[0],
+            consumption_frequency: item.consumptionFrequency,
+            therapeutic_indication: item.therapeuticIndication,
+            active_ingredient: item.activeIngredient,
+            administration_route: item.administrationRoute,
+            special_control: item.specialControl,
+            storage_temperature: item.storageTemperature,
+            seasonality: item.seasonality,
+            trend: item.trend,
+            volatility: item.volatility,
+            stockout_rate: item.stockoutRate,
+            cost_center: item.costCenter,
+            movement_type: item.movementType,
+            invoice_number: item.invoiceNumber,
+            responsible: item.responsible,
+            needs_reorder: item.needsReorder,
+          },
         }])
         .select()
         .single();
 
       if (error) throw error;
 
+      const extra = (data.extra_data as any) || {};
       const newItem = {
-        ...data,
+        id: data.id,
+        code: data.code,
+        name: data.name,
+        quantity: Number(data.quantity),
         unitPrice: Number(data.unit_price),
         totalValue: Number(data.total_value),
-        expirationDate: data.expiration_date ? new Date(data.expiration_date) : undefined,
-        movementDate: data.movement_date ? new Date(data.movement_date) : undefined,
-        lastPurchaseDate: data.last_purchase_date ? new Date(data.last_purchase_date) : undefined,
+        classification: data.classification as 'A' | 'B' | 'C',
+        unit: extra.unit,
+        category: extra.category,
+        clinicalCriticality: extra.clinical_criticality,
+        // ... outros campos do extra_data
       } as MedicineItem;
 
       set((state) => ({
@@ -210,13 +304,30 @@ export const useDataStore = create<DataState>((set, get) => ({
 
   updateItem: async (id, updatedItem) => {
     try {
-      const updateData: any = { ...updatedItem };
+      // Separar campos principais de extra_data
+      const updateData: any = {};
       
+      // Campos principais
+      if (updatedItem.code !== undefined) updateData.code = updatedItem.code;
+      if (updatedItem.name !== undefined) updateData.name = updatedItem.name;
+      if (updatedItem.quantity !== undefined) updateData.quantity = updatedItem.quantity;
       if (updatedItem.unitPrice !== undefined) updateData.unit_price = updatedItem.unitPrice;
       if (updatedItem.totalValue !== undefined) updateData.total_value = updatedItem.totalValue;
-      if (updatedItem.expirationDate !== undefined) updateData.expiration_date = updatedItem.expirationDate?.toISOString().split('T')[0];
-      if (updatedItem.movementDate !== undefined) updateData.movement_date = updatedItem.movementDate?.toISOString();
-      if (updatedItem.lastPurchaseDate !== undefined) updateData.last_purchase_date = updatedItem.lastPurchaseDate?.toISOString().split('T')[0];
+      if (updatedItem.classification !== undefined) updateData.classification = updatedItem.classification;
+      
+      // Atualizar extra_data apenas se houver campos extras
+      const extraFields: any = {};
+      if (updatedItem.unit !== undefined) extraFields.unit = updatedItem.unit;
+      if (updatedItem.category !== undefined) extraFields.category = updatedItem.category;
+      if (updatedItem.supplier !== undefined) extraFields.supplier = updatedItem.supplier;
+      if (updatedItem.clinicalCriticality !== undefined) extraFields.clinical_criticality = updatedItem.clinicalCriticality;
+      if (updatedItem.expirationDate !== undefined) extraFields.expiration_date = updatedItem.expirationDate?.toISOString().split('T')[0];
+      
+      if (Object.keys(extraFields).length > 0) {
+        // Buscar extra_data atual e fazer merge
+        const { data: current } = await supabase.from('medicines').select('extra_data').eq('id', id).single();
+        updateData.extra_data = { ...(current?.extra_data as any || {}), ...extraFields };
+      }
       
       const { data, error } = await supabase
         .from('medicines')
@@ -227,13 +338,19 @@ export const useDataStore = create<DataState>((set, get) => ({
 
       if (error) throw error;
 
+      const extra = (data.extra_data as any) || {};
       const updated = {
-        ...data,
+        id: data.id,
+        code: data.code,
+        name: data.name,
+        quantity: Number(data.quantity),
         unitPrice: Number(data.unit_price),
         totalValue: Number(data.total_value),
-        expirationDate: data.expiration_date ? new Date(data.expiration_date) : undefined,
-        movementDate: data.movement_date ? new Date(data.movement_date) : undefined,
-        lastPurchaseDate: data.last_purchase_date ? new Date(data.last_purchase_date) : undefined,
+        classification: data.classification as 'A' | 'B' | 'C',
+        unit: extra.unit,
+        category: extra.category,
+        clinicalCriticality: extra.clinical_criticality,
+        // ... outros campos
       } as MedicineItem;
 
       set((state) => {

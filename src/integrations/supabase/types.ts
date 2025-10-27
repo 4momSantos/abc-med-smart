@@ -204,167 +204,50 @@ export type Database = {
       }
       medicines: {
         Row: {
-          accumulated_percentage: number | null
-          active_ingredient: string | null
-          administration_route: string | null
-          batch: string | null
-          category: string | null
           classification: string | null
-          clinical_criticality: string | null
           code: string | null
-          consumption_frequency: string | null
-          cost_center: string | null
-          created_at: string
-          cumulative_percentage: number | null
-          current_stock: number | null
-          discount: number | null
-          expiration_date: string | null
+          created_at: string | null
+          extra_data: Json | null
           id: string
-          invoice_number: string | null
-          last_purchase_date: string | null
-          lead_time: number | null
-          min_stock: number | null
-          month: number | null
-          movement_date: string | null
-          movement_type: string | null
           name: string
-          needs_reorder: boolean | null
           organization_id: string
-          percentage: number | null
-          profit_margin: number | null
           quantity: number
-          reorder_point: number | null
-          requesting_sector: string | null
-          responsible: string | null
-          seasonality: string | null
-          special_control: boolean | null
-          stock_value: number | null
-          stockout_rate: number | null
-          storage_temperature: string | null
-          subcategory: string | null
-          supplier: string | null
-          tax: number | null
-          therapeutic_indication: string | null
-          total_cost: number | null
           total_value: number
-          trend: string | null
-          unit: string | null
           unit_price: number
-          updated_at: string
+          updated_at: string | null
           user_id: string
-          value_percentage: number | null
-          volatility: number | null
-          year: number | null
         }
         Insert: {
-          accumulated_percentage?: number | null
-          active_ingredient?: string | null
-          administration_route?: string | null
-          batch?: string | null
-          category?: string | null
           classification?: string | null
-          clinical_criticality?: string | null
           code?: string | null
-          consumption_frequency?: string | null
-          cost_center?: string | null
-          created_at?: string
-          cumulative_percentage?: number | null
-          current_stock?: number | null
-          discount?: number | null
-          expiration_date?: string | null
+          created_at?: string | null
+          extra_data?: Json | null
           id?: string
-          invoice_number?: string | null
-          last_purchase_date?: string | null
-          lead_time?: number | null
-          min_stock?: number | null
-          month?: number | null
-          movement_date?: string | null
-          movement_type?: string | null
           name: string
-          needs_reorder?: boolean | null
           organization_id: string
-          percentage?: number | null
-          profit_margin?: number | null
           quantity: number
-          reorder_point?: number | null
-          requesting_sector?: string | null
-          responsible?: string | null
-          seasonality?: string | null
-          special_control?: boolean | null
-          stock_value?: number | null
-          stockout_rate?: number | null
-          storage_temperature?: string | null
-          subcategory?: string | null
-          supplier?: string | null
-          tax?: number | null
-          therapeutic_indication?: string | null
-          total_cost?: number | null
           total_value: number
-          trend?: string | null
-          unit?: string | null
           unit_price: number
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
-          value_percentage?: number | null
-          volatility?: number | null
-          year?: number | null
         }
         Update: {
-          accumulated_percentage?: number | null
-          active_ingredient?: string | null
-          administration_route?: string | null
-          batch?: string | null
-          category?: string | null
           classification?: string | null
-          clinical_criticality?: string | null
           code?: string | null
-          consumption_frequency?: string | null
-          cost_center?: string | null
-          created_at?: string
-          cumulative_percentage?: number | null
-          current_stock?: number | null
-          discount?: number | null
-          expiration_date?: string | null
+          created_at?: string | null
+          extra_data?: Json | null
           id?: string
-          invoice_number?: string | null
-          last_purchase_date?: string | null
-          lead_time?: number | null
-          min_stock?: number | null
-          month?: number | null
-          movement_date?: string | null
-          movement_type?: string | null
           name?: string
-          needs_reorder?: boolean | null
           organization_id?: string
-          percentage?: number | null
-          profit_margin?: number | null
           quantity?: number
-          reorder_point?: number | null
-          requesting_sector?: string | null
-          responsible?: string | null
-          seasonality?: string | null
-          special_control?: boolean | null
-          stock_value?: number | null
-          stockout_rate?: number | null
-          storage_temperature?: string | null
-          subcategory?: string | null
-          supplier?: string | null
-          tax?: number | null
-          therapeutic_indication?: string | null
-          total_cost?: number | null
           total_value?: number
-          trend?: string | null
-          unit?: string | null
           unit_price?: number
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
-          value_percentage?: number | null
-          volatility?: number | null
-          year?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "medicines_organization_id_fkey"
+            foreignKeyName: "medicines_new_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
