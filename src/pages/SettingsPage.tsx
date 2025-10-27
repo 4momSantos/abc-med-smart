@@ -21,6 +21,7 @@ import { ThemeToggleCard } from '@/components/settings/ThemeToggleCard';
 import { PRIMARY_COLOR_PRESETS, ACCENT_COLOR_PRESETS } from '@/lib/themeUtils';
 import { applyVisualPreferences } from '@/lib/themeUtils';
 import { RefreshCw, Trash2, Info } from 'lucide-react';
+import { OrganizationSettings } from '@/components/organization/OrganizationSettings';
 
 export default function SettingsPage() {
   const {
@@ -102,6 +103,7 @@ export default function SettingsPage() {
           <TabsTrigger value="general">Gerais</TabsTrigger>
           <TabsTrigger value="abc">Curva ABC</TabsTrigger>
           <TabsTrigger value="display">Visualização</TabsTrigger>
+          <TabsTrigger value="organization">Organização</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
@@ -415,6 +417,10 @@ export default function SettingsPage() {
               Restaurar Padrão
             </Button>
           </div>
+        </TabsContent>
+
+        <TabsContent value="organization" className="space-y-4">
+          <OrganizationSettings />
         </TabsContent>
       </Tabs>
     </div>

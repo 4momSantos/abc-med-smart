@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { OrganizationSwitcher } from '@/components/organization/OrganizationSwitcher';
 
 const breadcrumbMap: Record<string, string[]> = {
   '/': ['Dashboard'],
@@ -118,6 +119,8 @@ export const Topbar = () => {
         <Button variant="ghost" size="icon" title="Compartilhar">
           <Share2 className="w-5 h-5" />
         </Button>
+
+        <OrganizationSwitcher />
 
         {/* User Menu */}
         <DropdownMenu>
