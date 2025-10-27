@@ -15,6 +15,7 @@ import SearchPage from "./pages/SearchPage";
 import MLPage from "./pages/MLPage";
 import StatisticsPage from "./pages/StatisticsPage";
 import SettingsPage from "./pages/SettingsPage";
+import SystemAdminPage from "./pages/SystemAdminPage";
 import ReportsPage from "./pages/ReportsPage";
 import SavedDataPage from "./pages/SavedDataPage";
 import HelpPage from "./pages/HelpPage";
@@ -46,7 +47,8 @@ const AppContent = () => {
             <Route path="search" element={<SearchPage />} />
             <Route path="ml" element={<MLPage />} />
             <Route path="statistics" element={<StatisticsPage />} />
-            <Route path="settings" element={<ProtectedRoute requiredRole="admin"><SettingsPage /></ProtectedRoute>} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="system-admin" element={<ProtectedRoute requiredRole="admin"><SystemAdminPage /></ProtectedRoute>} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="saved-data" element={<SavedDataPage />} />
             <Route path="help" element={<HelpPage />} />

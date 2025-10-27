@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useOrganizationStore } from '@/store/organizationStore';
 import type { Organization, OrgRole } from '@/types/organization';
 
 type UserRole = 'admin' | 'manager' | 'viewer';
@@ -115,6 +116,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(() => {
             fetchUserRole(session.user.id);
             fetchOrganization(session.user.id);
+            // Fetch all organizations for the user
+            useOrganizationStore.getState().fetchOrganizations();
           }, 0);
         } else {
           setUserRole(null);
@@ -133,6 +136,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(() => {
           fetchUserRole(session.user.id);
           fetchOrganization(session.user.id);
+          // Fetch all organizations for the user
+          useOrganizationStore.getState().fetchOrganizations();
         }, 0);
       }
       setLoading(false);

@@ -10,25 +10,45 @@ import {
   Settings, 
   HelpCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Shield
 } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
-const menuItems = [
-  { path: '/', icon: Home, label: 'Dashboard' },
-  { path: '/visualizations', icon: BarChart3, label: 'Visualizações' },
-  { path: '/ml', icon: Brain, label: 'Machine Learning' },
-  { path: '/statistics', icon: TrendingUp, label: 'Estatísticas' },
-  { path: '/import', icon: Upload, label: 'Importar Dados' },
-  { path: '/reports', icon: FileText, label: 'Relatórios' },
-  { path: '/settings', icon: Settings, label: 'Configurações' },
-  { path: '/help', icon: HelpCircle, label: 'Ajuda' },
-];
-
 export const Sidebar = () => {
   const { sidebarCollapsed, toggleSidebarCollapse } = useUIStore();
+  const { userRole } = useAuth();
+
+  // Menu items dinâmicos baseados em role
+  const getMenuItems = () => {
+    const baseItems = [
+      { path: '/', icon: Home, label: 'Dashboard' },
+      { path: '/visualizations', icon: BarChart3, label: 'Visualizações' },
+      { path: '/ml', icon: Brain, label: 'Machine Learning' },
+      { path: '/statistics', icon: TrendingUp, label: 'Estatísticas' },
+      { path: '/import', icon: Upload, label: 'Importar Dados' },
+      { path: '/reports', icon: FileText, label: 'Relatórios' },
+      { path: '/settings', icon: Settings, label: 'Configurações' },
+    ];
+
+    // Adicionar item de administração apenas para admins
+    if (userRole === 'admin') {
+      baseItems.push({
+        path: '/system-admin',
+        icon: Shield,
+        label: 'Administração',
+      });
+    }
+
+    baseItems.push({ path: '/help', icon: HelpCircle, label: 'Ajuda' });
+
+    return baseItems;
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <motion.aside
