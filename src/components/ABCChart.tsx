@@ -41,13 +41,22 @@ export const ABCChart = ({ items }: ABCChartProps) => {
 
   return (
     <ResponsiveContainer width="100%" height={400}>
-      <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+      <ComposedChart 
+        data={chartData} 
+        margin={{ 
+          top: 10, 
+          right: 20, 
+          left: 0,
+          bottom: items.length > 50 ? 80 : 60
+        }}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis 
           dataKey="name" 
           angle={-45} 
           textAnchor="end" 
-          height={100}
+          height={items.length > 50 ? 100 : 80}
+          interval={items.length > 100 ? 5 : 0}
           stroke="hsl(var(--foreground))"
         />
         <YAxis 

@@ -6,10 +6,31 @@ interface PieChartProps {
   title?: string;
 }
 
+// Converter HSL CSS vars para RGB que Plotly entende
+const getABCColors = () => {
+  const isDark = document.documentElement.classList.contains('dark');
+  
+  if (isDark) {
+    return {
+      A: 'rgb(66, 218, 134)',  // Verde vibrante
+      B: 'rgb(245, 194, 61)',  // Amarelo/Laranja
+      C: 'rgb(235, 110, 115)', // Vermelho/Rosa
+    };
+  }
+  
+  return {
+    A: 'rgb(39, 174, 96)',   // Verde
+    B: 'rgb(247, 202, 24)',  // Amarelo
+    C: 'rgb(231, 76, 60)',   // Vermelho
+  };
+};
+
 export const PieChart = ({ items, title = "Distribuição por Classe ABC" }: PieChartProps) => {
   const classA = items.filter(i => i.classification === "A");
   const classB = items.filter(i => i.classification === "B");
   const classC = items.filter(i => i.classification === "C");
+
+  const colors = getABCColors();
 
   const data = [
     {
@@ -17,7 +38,7 @@ export const PieChart = ({ items, title = "Distribuição por Classe ABC" }: Pie
       labels: ["Classe A", "Classe B", "Classe C"],
       type: "pie" as const,
       marker: {
-        colors: ["hsl(var(--class-a))", "hsl(var(--class-b))", "hsl(var(--class-c))"]
+        colors: [colors.A, colors.B, colors.C]
       },
       textinfo: "label+percent",
       hovertemplate: "<b>%{label}</b><br>Itens: %{value}<br>Percentual: %{percent}<extra></extra>"
@@ -32,14 +53,14 @@ export const PieChart = ({ items, title = "Distribuição por Classe ABC" }: Pie
         paper_bgcolor: "transparent",
         plot_bgcolor: "transparent",
         font: { color: "hsl(var(--foreground))" },
-        margin: { t: 0, b: 0, l: 0, r: 0 },
+        margin: { t: 10, b: 10, l: 10, r: 10 },
         showlegend: true,
         legend: {
-          orientation: "h",
-          yanchor: "bottom",
-          y: -0.2,
-          xanchor: "center",
-          x: 0.5
+          orientation: "v",
+          yanchor: "middle",
+          y: 0.5,
+          xanchor: "left",
+          x: 1.05
         }
       }}
       config={{ responsive: true, displayModeBar: false }}

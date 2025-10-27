@@ -64,9 +64,9 @@ export default function Dashboard() {
     const classDistribution = { A: 0, B: 0, C: 0 };
     
     filteredItems.forEach((item) => {
-      if (item.classification) {
-        classDistribution[item.classification]++;
-      }
+      // Segurança: se não tiver classificação, assume C
+      const classification = item.classification || 'C';
+      classDistribution[classification]++;
     });
 
     return { totalValue, classDistribution };

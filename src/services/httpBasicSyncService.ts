@@ -329,6 +329,12 @@ class HttpBasicSyncService {
         erros += result.errors;
         
         console.log(`HTTP Sync: ${result.inserted} itens salvos no Supabase`);
+        
+        // IMPORTANTE: Recarregar dados do banco para recalcular ABC
+        const { useDataStore } = await import('@/store/dataStore');
+        await useDataStore.getState().fetchItems();
+        console.log('✅ Dados recarregados e ABC recalculado');
+        
       } catch (error: any) {
         console.error('Erro ao salvar no Supabase:', error);
         erros += itemsToImport.length;

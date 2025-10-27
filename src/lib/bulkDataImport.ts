@@ -88,8 +88,14 @@ export async function bulkInsertMedicines(items: MedicineItem[]): Promise<{
           .select();
 
         if (error) {
-          console.error(`Erro no lote ${Math.floor(i / BATCH_SIZE) + 1}:`, error);
-          totalErrors += batch.length;
+          // Se for erro de duplicata (23505), contar como "ignorado" ao invés de erro
+          if (error.code === '23505') {
+            console.log(`Lote ${Math.floor(i / BATCH_SIZE) + 1}: ${batch.length} itens duplicados ignorados (código já existe)`);
+            // Não incrementar totalErrors para duplicatas
+          } else {
+            console.error(`Erro no lote ${Math.floor(i / BATCH_SIZE) + 1}:`, error);
+            totalErrors += batch.length;
+          }
         } else {
           totalInserted += data?.length || 0;
           console.log(`Lote ${Math.floor(i / BATCH_SIZE) + 1}: ${data?.length} inseridos`);

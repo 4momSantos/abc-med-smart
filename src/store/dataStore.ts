@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { MedicineItem } from '@/types/medicine';
 import { ABCConfiguration } from '@/types/abc';
-import { recalculateABCInPlace } from '@/lib/abcCalculator';
+import { recalculateABCInPlace, calculateABCClassification } from '@/lib/abcCalculator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useSettingsStore } from './settingsStore';
 
 interface FilterConfig {
   classABC?: ('A' | 'B' | 'C')[];
@@ -172,7 +173,11 @@ export const useDataStore = create<DataState>((set, get) => ({
         } as MedicineItem;
       });
 
-      set({ items, filteredItems: items });
+      // IMPORTANTE: Recalcular ABC dinamicamente com a config atual
+      const { abcConfig } = useSettingsStore.getState();
+      const classifiedItems = calculateABCClassification(items, abcConfig);
+
+      set({ items: classifiedItems, filteredItems: classifiedItems });
       get().applyFilters();
     } catch (error) {
       console.error('Error fetching medicines:', error);
