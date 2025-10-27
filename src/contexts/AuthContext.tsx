@@ -13,6 +13,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  refreshRole: () => Promise<void>;
   hasRole: (role: UserRole) => boolean;
   isAdmin: () => boolean;
   isManager: () => boolean;
@@ -123,13 +124,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Clear local state first
+      setUser(null);
+      setSession(null);
+      setUserRole(null);
+      
+      // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      setUserRole(null);
       toast.success('Logout realizado com sucesso!');
+      
+      // Force redirect to auth page
+      window.location.href = '/auth';
     } catch (error) {
+      console.error('Logout error:', error);
       toast.error('Erro ao fazer logout');
+      
+      // Force redirect even on error
+      window.location.href = '/auth';
+    }
+  };
+
+  const refreshRole = async () => {
+    const currentUser = user;
+    if (currentUser) {
+      await fetchUserRole(currentUser.id);
     }
   };
 
@@ -156,6 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
+    refreshRole,
     hasRole,
     isAdmin,
     isManager,
