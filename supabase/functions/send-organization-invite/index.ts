@@ -26,17 +26,23 @@ serve(async (req) => {
       throw new Error('Dados incompletos: email, organizationId e role são obrigatórios');
     }
 
-    // Verificar se usuário já está na organização
-    const { data: existingMember } = await supabase
-      .from('organization_members')
-      .select('id')
-      .eq('organization_id', organizationId)
-      .eq('user_id', invitedBy)
-      .eq('is_active', true)
-      .single();
+    // Verificar se usuário com este email já existe no sistema
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const existingUser = existingUsers.users.find(u => u.email === email);
 
-    if (existingMember) {
-      throw new Error('Usuário já é membro desta organização');
+    // Se usuário existe, verificar se já é membro da organização
+    if (existingUser) {
+      const { data: existingMember } = await supabase
+        .from('organization_members')
+        .select('id')
+        .eq('organization_id', organizationId)
+        .eq('user_id', existingUser.id)
+        .eq('is_active', true)
+        .single();
+
+      if (existingMember) {
+        throw new Error('Este usuário já é membro desta organização');
+      }
     }
 
     // Gerar token único
@@ -84,17 +90,13 @@ serve(async (req) => {
 
     console.log('Invitation created:', invitation.id);
 
-    // Verificar se usuário já tem conta
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const userExists = existingUsers.users.some(u => u.email === email);
-
     // Construir link de convite
     const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovable.app') || '';
     const inviteLink = `${baseUrl}/accept-invite?token=${token}`;
 
-    console.log('User exists:', userExists);
+    console.log('User exists:', existingUser ? 'Yes' : 'No');
 
-    if (userExists) {
+    if (existingUser) {
       // Usuário já tem conta - enviar apenas notificação
       console.log(`Usuário ${email} já tem conta. Link: ${inviteLink}`);
       // TODO: Integrar com Resend para emails customizados
