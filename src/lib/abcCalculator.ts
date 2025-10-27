@@ -19,14 +19,19 @@ export function calculateABCClassification(
 ): MedicineItem[] {
   // Se não houver itens, retornar array vazio
   if (!items || items.length === 0) {
+    console.log('[ABC] Nenhum item para classificar');
     return [];
   }
+
+  console.log('[ABC] Iniciando classificação de', items.length, 'itens');
+  console.log('[ABC] Config:', config);
 
   // 1. Ordenar itens por valor total (decrescente)
   const sortedItems = [...items].sort((a, b) => b.totalValue - a.totalValue);
 
   // 2. Calcular valor total geral
   const totalValue = sortedItems.reduce((sum, item) => sum + item.totalValue, 0);
+  console.log('[ABC] Valor total:', totalValue);
 
   // Se o valor total for zero, retornar itens sem classificação
   if (totalValue === 0) {
@@ -72,6 +77,15 @@ export function calculateABCClassification(
       classification,
     };
   });
+
+  const classACounts = classifiedItems.filter(i => i.classification === 'A').length;
+  const classBCounts = classifiedItems.filter(i => i.classification === 'B').length;
+  const classCCounts = classifiedItems.filter(i => i.classification === 'C').length;
+  
+  console.log('[ABC] Classificação concluída:');
+  console.log('  - Classe A:', classACounts, 'itens');
+  console.log('  - Classe B:', classBCounts, 'itens');
+  console.log('  - Classe C:', classCCounts, 'itens');
 
   return classifiedItems;
 }

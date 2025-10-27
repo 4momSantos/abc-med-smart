@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -13,11 +14,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useDataStore } from '@/store/dataStore';
 import { useToast } from '@/hooks/use-toast';
 import { ColorPicker } from '@/components/settings/ColorPicker';
 import { ThemeToggleCard } from '@/components/settings/ThemeToggleCard';
 import { PRIMARY_COLOR_PRESETS, ACCENT_COLOR_PRESETS } from '@/lib/themeUtils';
 import { applyVisualPreferences } from '@/lib/themeUtils';
+import { RefreshCw, Trash2, Info } from 'lucide-react';
 
 export default function SettingsPage() {
   const {
@@ -33,13 +36,37 @@ export default function SettingsPage() {
     updateVisualPreferences,
     resetVisualPreferences,
   } = useSettingsStore();
+  const { items, recalculateABC, setItems } = useDataStore();
   const { toast } = useToast();
 
   const handleSaveABCConfig = () => {
+    // Recalcular ABC automaticamente ao salvar
+    recalculateABC(abcConfig);
     toast({
       title: 'Configurações salvas',
-      description: 'As configurações da Curva ABC foram atualizadas com sucesso.',
+      description: 'As configurações da Curva ABC foram atualizadas e os itens foram reclassificados.',
     });
+  };
+
+  const handleRecalculateABC = () => {
+    console.log('[Settings] Forçando recálculo ABC de', items.length, 'itens');
+    recalculateABC(abcConfig);
+    toast({
+      title: 'Recálculo concluído',
+      description: `${items.length} itens foram reclassificados com sucesso.`,
+    });
+  };
+
+  const handleClearAllData = () => {
+    if (confirm(`Tem certeza que deseja limpar TODOS os dados? Esta ação não pode ser desfeita.\n\nItens que serão removidos: ${items.length}`)) {
+      setItems([]);
+      localStorage.clear();
+      toast({
+        title: 'Dados limpos',
+        description: 'Todos os dados foram removidos. Você pode reimportar sua planilha.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleApplyVisualPreferences = () => {
@@ -130,6 +157,15 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="abc" className="space-y-4">
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>⚠️ Dados antigos importados antes desta atualização:</strong> Se você já tinha dados 
+              importados e todos aparecem como "Classe C", use o botão "Recalcular Classificação" abaixo 
+              para aplicar o cálculo correto da Curva ABC.
+            </AlertDescription>
+          </Alert>
+
           <Card>
             <CardHeader>
               <CardTitle>Parâmetros da Curva ABC</CardTitle>
@@ -178,6 +214,46 @@ export default function SettingsPage() {
               <Button onClick={handleSaveABCConfig} className="w-full">
                 Salvar Configurações
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Gerenciar Dados</CardTitle>
+              <CardDescription>
+                Recalcular classificações ou limpar dados existentes
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Total de itens armazenados: <strong>{items.length}</strong>
+                </p>
+              </div>
+
+              <Button 
+                onClick={handleRecalculateABC} 
+                variant="outline" 
+                className="w-full"
+                disabled={items.length === 0}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Recalcular Classificação ABC de Todos os Itens
+              </Button>
+
+              <Button 
+                onClick={handleClearAllData} 
+                variant="destructive" 
+                className="w-full"
+                disabled={items.length === 0}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Limpar Todos os Dados
+              </Button>
+              
+              <p className="text-xs text-muted-foreground">
+                💡 Use "Recalcular" se já tinha dados importados antes e todos aparecem como Classe C
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
