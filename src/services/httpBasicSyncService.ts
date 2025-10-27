@@ -263,10 +263,7 @@ class HttpBasicSyncService {
     let ignorados = 0;
     let erros = 0;
     
-    // Obter items existentes do localStorage
-    const storedData = localStorage.getItem('data-storage');
-    const existingItems: MedicineItem[] = storedData ? JSON.parse(storedData).state?.items || [] : [];
-    const updatedItems = [...existingItems];
+    const itemsToImport: MedicineItem[] = [];
     
     // Processar cada registro
     for (const record of records) {
@@ -299,28 +296,18 @@ class HttpBasicSyncService {
           totalValue: (Number(transformedItem.quantidade) || 0) * (Number(transformedItem.preco) || 0),
           unit: transformedItem.unidade,
           category: transformedItem.categoria,
+          subcategory: transformedItem.subcategoria,
           batch: transformedItem.lote,
           expirationDate: transformedItem.data_validade ? new Date(transformedItem.data_validade) : undefined,
           supplier: transformedItem.fornecedor,
+          clinicalCriticality: transformedItem.criticidade,
+          requestingSector: transformedItem.setor,
+          leadTime: transformedItem.prazo_entrega ? Number(transformedItem.prazo_entrega) : undefined,
+          minStock: transformedItem.estoque_minimo ? Number(transformedItem.estoque_minimo) : undefined,
+          currentStock: transformedItem.estoque_atual ? Number(transformedItem.estoque_atual) : undefined,
         };
         
-        // Verificar se item já existe
-        const existingIndex = updatedItems.findIndex((i: MedicineItem) => 
-          i.code === medicineItem.code || i.id === medicineItem.id
-        );
-        
-        if (existingIndex >= 0) {
-          // Atualizar item existente
-          updatedItems[existingIndex] = {
-            ...updatedItems[existingIndex],
-            ...medicineItem,
-          } as MedicineItem;
-          atualizados++;
-        } else {
-          // Inserir novo item
-          updatedItems.push(medicineItem as MedicineItem);
-          inseridos++;
-        }
+        itemsToImport.push(medicineItem as MedicineItem);
         
       } catch (error: any) {
         erros++;
@@ -333,15 +320,24 @@ class HttpBasicSyncService {
       }
     }
     
-    // Salvar items atualizados no localStorage
-    if (storedData) {
-      const data = JSON.parse(storedData);
-      data.state.items = updatedItems;
-      data.state.filteredItems = updatedItems;
-      localStorage.setItem('data-storage', JSON.stringify(data));
-      
-      // Disparar evento para atualizar o store
-      window.dispatchEvent(new Event('storage'));
+    // Salvar no Supabase usando bulk insert
+    if (itemsToImport.length > 0) {
+      try {
+        const { bulkInsertMedicines } = await import('@/lib/bulkDataImport');
+        const result = await bulkInsertMedicines(itemsToImport);
+        inseridos = result.inserted;
+        erros += result.errors;
+        
+        console.log(`HTTP Sync: ${result.inserted} itens salvos no Supabase`);
+      } catch (error: any) {
+        console.error('Erro ao salvar no Supabase:', error);
+        erros += itemsToImport.length;
+        syncLog.erros.push({
+          tipo: 'erro_geral',
+          mensagem: `Erro ao salvar no banco: ${error.message}`,
+          timestamp: new Date().toISOString(),
+        });
+      }
     }
     
     syncLog.dados.inseridos = inseridos;

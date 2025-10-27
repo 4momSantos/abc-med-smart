@@ -29,25 +29,37 @@ export default function ImportPage() {
     syncNow,
   } = useHttpSync();
 
-  const handleImportComplete = (items: any[]) => {
+  const handleImportComplete = async (items: any[]) => {
     try {
-      setItems(items);
-      navigate('/');
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        const itemCount = items.length;
-        const message = itemCount > 10000 
-          ? `O arquivo possui ${itemCount.toLocaleString()} itens e excede o limite de armazenamento local (~5MB). Considere usar sincronização HTTP ou importar arquivos menores.`
-          : `O armazenamento local está cheio. Por favor, limpe dados antigos ou use arquivos menores.`;
+      const { toast } = await import('sonner');
+      const { bulkInsertMedicines } = await import('@/lib/bulkDataImport');
+      
+      const loadingToast = toast.loading(`Salvando ${items.length} itens no banco de dados...`);
+      
+      // Salvar no Supabase
+      const result = await bulkInsertMedicines(items);
+      
+      toast.dismiss(loadingToast);
+      
+      if (result.success) {
+        toast.success(`${result.inserted} itens importados com sucesso!`);
         
-        if (confirm(`${message}\n\nDeseja limpar os dados antigos e tentar novamente?`)) {
-          localStorage.clear();
-          window.location.reload();
-        }
+        // Recarregar dados do banco
+        await useDataStore.getState().fetchItems();
+        
+        navigate('/');
       } else {
-        console.error('Erro ao importar dados:', error);
-        alert('Erro ao importar dados. Por favor, tente novamente.');
+        toast.error('Nenhum item foi importado');
       }
+      
+      if (result.errors > 0) {
+        toast.warning(`${result.errors} itens com erro`);
+      }
+      
+    } catch (error: any) {
+      const { toast } = await import('sonner');
+      console.error('Erro ao importar dados:', error);
+      toast.error('Erro ao salvar no banco de dados: ' + error.message);
     }
   };
 
