@@ -9,6 +9,7 @@ import { FilterBar } from '@/components/shared/FilterBar';
 import { ABCTable } from '@/components/ABCTable';
 import { ABCSummary } from '@/components/ABCSummary';
 import { ChartWidget } from '@/components/charts/ChartWidget';
+import { ValidityControl } from '@/components/ValidityControl';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MedicineItem } from '@/types/medicine';
 
@@ -185,9 +186,10 @@ export default function Dashboard() {
 
       {/* Charts Grid - Otimizados */}
       <Tabs defaultValue="value" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="value">Análise de Valor</TabsTrigger>
           <TabsTrigger value="distribution">Distribuição</TabsTrigger>
+          <TabsTrigger value="validity">Controle de Validade</TabsTrigger>
           <TabsTrigger value="summary">Resumo</TabsTrigger>
         </TabsList>
 
@@ -239,6 +241,10 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="validity" className="space-y-4">
+          <ValidityControl items={filteredItems} />
         </TabsContent>
 
         <TabsContent value="summary" className="space-y-4">

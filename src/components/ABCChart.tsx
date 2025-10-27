@@ -66,7 +66,7 @@ export const ABCChart = ({ items }: ABCChartProps) => {
         <Bar 
           yAxisId="left" 
           dataKey="valor" 
-          fill="hsl(var(--primary))" 
+          fill="hsl(var(--chart-1))" 
           name="Valor Total"
           radius={[8, 8, 0, 0]}
         />
@@ -74,10 +74,10 @@ export const ABCChart = ({ items }: ABCChartProps) => {
           yAxisId="right" 
           type="monotone" 
           dataKey="acumulado" 
-          stroke="hsl(var(--destructive))" 
+          stroke="hsl(var(--chart-6))" 
           strokeWidth={3}
           name="% Acumulado"
-          dot={{ fill: "hsl(var(--destructive))", r: 4 }}
+          dot={{ fill: "hsl(var(--chart-6))", r: 4 }}
         />
       </ComposedChart>
     </ResponsiveContainer>

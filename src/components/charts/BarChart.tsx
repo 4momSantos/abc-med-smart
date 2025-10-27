@@ -25,9 +25,9 @@ export const BarChart = ({ items, title = "Top Itens por Valor", topN = 10 }: Ba
       orientation: "h" as const,
       marker: {
         color: topItems.map(i => 
-          i.classification === "A" ? "hsl(var(--chart-1))" :
-          i.classification === "B" ? "hsl(var(--chart-2))" :
-          "hsl(var(--chart-3))"
+          i.classification === "A" ? "hsl(var(--class-a))" :
+          i.classification === "B" ? "hsl(var(--class-b))" :
+          "hsl(var(--class-c))"
         )
       },
       hovertemplate: "<b>%{y}</b><br>Valor: R$ %{x:,.2f}<extra></extra>"

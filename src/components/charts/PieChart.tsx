@@ -17,7 +17,7 @@ export const PieChart = ({ items, title = "Distribuição por Classe ABC" }: Pie
       labels: ["Classe A", "Classe B", "Classe C"],
       type: "pie" as const,
       marker: {
-        colors: ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"]
+        colors: ["hsl(var(--class-a))", "hsl(var(--class-b))", "hsl(var(--class-c))"]
       },
       textinfo: "label+percent",
       hovertemplate: "<b>%{label}</b><br>Itens: %{value}<br>Percentual: %{percent}<extra></extra>"

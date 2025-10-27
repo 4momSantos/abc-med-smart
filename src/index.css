@@ -39,17 +39,40 @@ All colors MUST be HSL.
     --radius: 0.75rem;
 
     /* ABC Classification Colors */
-    --class-a: 142 76% 36%;
+    --class-a: 142 71% 45%;
     --class-a-foreground: 0 0% 100%;
     --class-a-light: 142 50% 95%;
 
-    --class-b: 45 93% 47%;
+    --class-b: 45 93% 55%;
     --class-b-foreground: 0 0% 100%;
     --class-b-light: 45 90% 95%;
 
-    --class-c: 0 72% 51%;
+    --class-c: 0 70% 58%;
     --class-c-foreground: 0 0% 100%;
     --class-c-light: 0 70% 96%;
+
+    /* Chart Colors - Professional Palette */
+    --chart-1: 210 100% 56%;    /* Blue */
+    --chart-2: 142 71% 45%;     /* Green */
+    --chart-3: 45 93% 55%;      /* Yellow */
+    --chart-4: 280 100% 70%;    /* Purple */
+    --chart-5: 340 82% 60%;     /* Pink */
+    --chart-6: 24 95% 58%;      /* Orange */
+    --chart-7: 186 100% 42%;    /* Cyan */
+    --chart-8: 339 100% 48%;    /* Magenta */
+
+    /* Validity Status Colors */
+    --expired: 0 70% 58%;
+    --expires-soon: 38 92% 50%;
+    --valid: 142 71% 45%;
+    
+    /* Warning Colors */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --info: 210 100% 56%;
+    --info-foreground: 0 0% 100%;
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(210 100% 45%) 0%, hsl(210 100% 60%) 100%);
@@ -90,14 +113,34 @@ All colors MUST be HSL.
     --input: 215 20% 25%;
     --ring: 210 100% 55%;
 
-    --class-a: 142 70% 45%;
+    --class-a: 142 70% 50%;
     --class-a-light: 142 30% 20%;
 
-    --class-b: 45 90% 55%;
+    --class-b: 45 90% 60%;
     --class-b-light: 45 40% 20%;
 
-    --class-c: 0 70% 60%;
+    --class-c: 0 70% 65%;
     --class-c-light: 0 40% 20%;
+
+    /* Chart Colors - Dark Mode */
+    --chart-1: 210 100% 60%;
+    --chart-2: 142 70% 50%;
+    --chart-3: 45 90% 60%;
+    --chart-4: 280 100% 75%;
+    --chart-5: 340 82% 65%;
+    --chart-6: 24 95% 63%;
+    --chart-7: 186 100% 47%;
+    --chart-8: 339 100% 55%;
+
+    /* Validity Status Colors - Dark Mode */
+    --expired: 0 70% 65%;
+    --expires-soon: 38 92% 55%;
+    --valid: 142 70% 50%;
+    
+    /* Warning Colors - Dark Mode */
+    --warning: 38 92% 55%;
+    --success: 142 70% 50%;
+    --info: 210 100% 60%;
 
     --gradient-primary: linear-gradient(135deg, hsl(210 100% 45%) 0%, hsl(210 100% 65%) 100%);
     --gradient-card: linear-gradient(135deg, hsl(215 25% 15%) 0%, hsl(215 25% 18%) 100%);
