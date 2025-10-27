@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ABCConfiguration, AnalysisPeriod } from '@/types/abc';
 import { useDataStore } from './dataStore';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface VisualPreferences {
   primaryColor: string;
@@ -19,7 +21,10 @@ interface SettingsState {
   currency: string;
   decimalPlaces: number;
   visualPreferences: VisualPreferences;
-  updateABCConfig: (config: Partial<ABCConfiguration>) => void;
+  isLoadingConfig: boolean;
+  
+  fetchABCConfig: () => Promise<void>;
+  updateABCConfig: (config: Partial<ABCConfiguration>) => Promise<void>;
   setPeriod: (period: AnalysisPeriod) => void;
   setLocale: (locale: 'pt-BR' | 'en-US' | 'es-ES') => void;
   setCurrency: (currency: string) => void;
@@ -37,13 +42,15 @@ const defaultVisualPreferences: VisualPreferences = {
   animationsEnabled: true,
 };
 
+const defaultABCConfig: ABCConfiguration = {
+  classAThreshold: 80,
+  classBThreshold: 95,
+};
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
-    (set) => ({
-      abcConfig: {
-        classAThreshold: 80,
-        classBThreshold: 95,
-      },
+    (set, get) => ({
+      abcConfig: defaultABCConfig,
       period: {
         startDate: new Date(new Date().getFullYear(), 0, 1),
         endDate: new Date(),
@@ -52,49 +59,120 @@ export const useSettingsStore = create<SettingsState>()(
       currency: 'BRL',
       decimalPlaces: 2,
       visualPreferences: defaultVisualPreferences,
-      
-      updateABCConfig: (config) => {
-        set((state) => {
-          const newConfig = { ...state.abcConfig, ...config };
+      isLoadingConfig: false,
+
+      fetchABCConfig: async () => {
+        set({ isLoadingConfig: true });
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData.user) {
+            set({ abcConfig: defaultABCConfig });
+            return;
+          }
+
+          const { data, error } = await supabase
+            .from('abc_configurations')
+            .select('*')
+            .eq('user_id', userData.user.id)
+            .maybeSingle();
+
+          if (error && error.code !== 'PGRST116') throw error;
+
+          if (data) {
+            set({
+              abcConfig: {
+                classAThreshold: Number(data.class_a_threshold),
+                classBThreshold: Number(data.class_b_threshold),
+              },
+            });
+          } else {
+            // Create default config for user
+            const { error: insertError } = await supabase
+              .from('abc_configurations')
+              .insert([{
+                user_id: userData.user.id,
+                class_a_threshold: defaultABCConfig.classAThreshold,
+                class_b_threshold: defaultABCConfig.classBThreshold,
+              }]);
+
+            if (insertError) throw insertError;
+            set({ abcConfig: defaultABCConfig });
+          }
+        } catch (error) {
+          console.error('Error fetching ABC config:', error);
+          set({ abcConfig: defaultABCConfig });
+        } finally {
+          set({ isLoadingConfig: false });
+        }
+      },
+
+      updateABCConfig: async (config) => {
+        const newConfig = { ...get().abcConfig, ...config };
+        
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData.user) throw new Error('User not authenticated');
+
+          const { error } = await supabase
+            .from('abc_configurations')
+            .update({
+              class_a_threshold: newConfig.classAThreshold,
+              class_b_threshold: newConfig.classBThreshold,
+            })
+            .eq('user_id', userData.user.id);
+
+          if (error) throw error;
+
+          set({ abcConfig: newConfig });
           
-          // Recalcular ABC em todos os itens do dataStore
+          // Recalculate ABC for all items
           setTimeout(() => {
             useDataStore.getState().recalculateABC(newConfig);
           }, 0);
-          
-          return { abcConfig: newConfig };
-        });
+
+          toast.success('Configuração ABC atualizada');
+        } catch (error) {
+          console.error('Error updating ABC config:', error);
+          toast.error('Erro ao atualizar configuração ABC');
+        }
       },
-      
+
       setPeriod: (period) => set({ period }),
       setLocale: (locale) => set({ locale }),
       setCurrency: (currency) => set({ currency }),
       setDecimalPlaces: (places) => set({ decimalPlaces: places }),
-      
+
       updateVisualPreferences: (prefs) =>
         set((state) => ({
           visualPreferences: { ...state.visualPreferences, ...prefs },
         })),
-      
-      resetVisualPreferences: () =>
-        set({ visualPreferences: defaultVisualPreferences }),
+
+      resetVisualPreferences: () => set({ visualPreferences: defaultVisualPreferences }),
     }),
     {
       name: 'settings-storage',
+      // Only persist visual preferences and period
+      partialize: (state) => ({
+        period: state.period,
+        locale: state.locale,
+        currency: state.currency,
+        decimalPlaces: state.decimalPlaces,
+        visualPreferences: state.visualPreferences,
+      }),
       onRehydrateStorage: () => (state) => {
         if (state?.period) {
           try {
-            const startDate = state.period.startDate instanceof Date 
-              ? state.period.startDate 
-              : new Date(state.period.startDate);
-            
-            const endDate = state.period.endDate instanceof Date 
-              ? state.period.endDate 
-              : new Date(state.period.endDate);
-            
-            // Validar se as datas são válidas
+            const startDate =
+              state.period.startDate instanceof Date
+                ? state.period.startDate
+                : new Date(state.period.startDate);
+
+            const endDate =
+              state.period.endDate instanceof Date
+                ? state.period.endDate
+                : new Date(state.period.endDate);
+
             if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-              // Fallback para datas padrão do ano atual
               const now = new Date();
               state.period = {
                 startDate: new Date(now.getFullYear(), 0, 1),
@@ -104,7 +182,6 @@ export const useSettingsStore = create<SettingsState>()(
               state.period = { startDate, endDate };
             }
           } catch (error) {
-            // Em caso de erro, usar datas padrão do ano atual
             const now = new Date();
             state.period = {
               startDate: new Date(now.getFullYear(), 0, 1),

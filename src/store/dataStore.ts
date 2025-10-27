@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { MedicineItem } from '@/types/medicine';
 import { ABCConfiguration } from '@/types/abc';
 import { recalculateABCInPlace } from '@/lib/abcCalculator';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface FilterConfig {
   classABC?: ('A' | 'B' | 'C')[];
@@ -20,252 +21,247 @@ interface DataState {
   items: MedicineItem[];
   filteredItems: MedicineItem[];
   activeFilters: FilterConfig;
+  isLoading: boolean;
+  
+  // CRUD operations
+  fetchItems: () => Promise<void>;
   setItems: (items: MedicineItem[]) => void;
-  addItem: (item: MedicineItem) => void;
-  deleteItem: (id: string) => void;
-  updateItem: (id: string, item: Partial<MedicineItem>) => void;
+  addItem: (item: Omit<MedicineItem, 'id'>) => Promise<void>;
+  deleteItem: (id: string) => Promise<void>;
+  updateItem: (id: string, item: Partial<MedicineItem>) => Promise<void>;
+  
+  // Filter operations
   setActiveFilters: (filters: FilterConfig) => void;
   applyFilters: () => void;
   clearFilters: () => void;
+  
+  // ABC recalculation
   recalculateABC: (config: ABCConfiguration) => void;
 }
 
-export const useDataStore = create<DataState>()(
-  persist(
-    (set, get) => ({
-      items: [],
-      filteredItems: [],
-      activeFilters: {},
-      
-      setItems: (items) => {
-        set({ items, filteredItems: items });
-        get().applyFilters();
-      },
-      
-      addItem: (item) => {
-        set((state) => {
-          const newItems = [...state.items, item];
-          return { items: newItems, filteredItems: newItems };
-        });
-        get().applyFilters();
-      },
-      
-      deleteItem: (id) => {
-        set((state) => {
-          const newItems = state.items.filter((item) => item.id !== id);
-          return { items: newItems, filteredItems: newItems };
-        });
-        get().applyFilters();
-      },
-      
-      updateItem: (id, updatedItem) => {
-        set((state) => {
-          const newItems = state.items.map((item) =>
-            item.id === id ? { ...item, ...updatedItem } : item
-          );
-          return { items: newItems, filteredItems: newItems };
-        });
-        get().applyFilters();
-      },
-      
-      setActiveFilters: (filters) => {
-        set({ activeFilters: filters });
-        get().applyFilters();
-      },
-      
-      applyFilters: () => {
-        const { items, activeFilters } = get();
-        let filtered = [...items];
-        
-        // Filtro por classe ABC
-        if (activeFilters.classABC && activeFilters.classABC.length > 0) {
-          filtered = filtered.filter((item) =>
-            activeFilters.classABC!.includes(item.classification!)
-          );
-        }
-        
-        // Filtro por range de valor
-        if (activeFilters.valueRange) {
-          const [min, max] = activeFilters.valueRange;
-          filtered = filtered.filter(
-            (item) => item.totalValue >= min && item.totalValue <= max
-          );
-        }
-        
-        // Filtro de busca textual
-        if (activeFilters.searchQuery) {
-          const query = activeFilters.searchQuery.toLowerCase();
-          filtered = filtered.filter(
-            (item) =>
-              item.name.toLowerCase().includes(query) ||
-              (item.code && item.code.toLowerCase().includes(query)) ||
-              (item.supplier && item.supplier.toLowerCase().includes(query)) ||
-              item.id.toLowerCase().includes(query)
-          );
-        }
-        
-        // Filtro por categoria
-        if (activeFilters.category) {
-          filtered = filtered.filter(
-            (item) => item.category === activeFilters.category
-          );
-        }
-        
-        // Filtro por fornecedor
-        if (activeFilters.supplier) {
-          filtered = filtered.filter(
-            (item) => item.supplier === activeFilters.supplier
-          );
-        }
-        
-        // Filtro por setor
-        if (activeFilters.sector) {
-          filtered = filtered.filter(
-            (item) => item.requestingSector === activeFilters.sector
-          );
-        }
-        
-        // Filtro por criticidade
-        if (activeFilters.criticality) {
-          filtered = filtered.filter(
-            (item) => item.clinicalCriticality === activeFilters.criticality
-          );
-        }
-        
-        // Filtro por lead time
-        if (activeFilters.leadTimeRange) {
-          const [min, max] = activeFilters.leadTimeRange;
-          filtered = filtered.filter(
-            (item) => item.leadTime !== undefined && item.leadTime >= min && item.leadTime <= max
-          );
-        }
-        
-        // Filtro por status de estoque
-        if (activeFilters.stockFilter) {
-          if (activeFilters.stockFilter === 'needsReorder') {
-            filtered = filtered.filter((item) => item.needsReorder === true);
-          } else if (activeFilters.stockFilter === 'belowMin') {
-            filtered = filtered.filter(
-              (item) => item.currentStock !== undefined && 
-                       item.minStock !== undefined && 
-                       item.currentStock < item.minStock
-            );
-          }
-        }
-        
-        set({ filteredItems: filtered });
-      },
-      
-      clearFilters: () => {
-        set({ activeFilters: {}, filteredItems: get().items });
-      },
-      
-      recalculateABC: (config) => {
-        const { items } = get();
-        if (items.length === 0) return;
-        
-        const recalculatedItems = recalculateABCInPlace(items, config);
-        set({ items: recalculatedItems, filteredItems: recalculatedItems });
-        get().applyFilters();
-      },
-    }),
-    {
-      name: 'data-storage',
-      // Não persistir filteredItems para economizar espaço no LocalStorage
-      partialize: (state) => ({ 
-        items: state.items,
-        activeFilters: state.activeFilters,
-      }),
-      // Recalcular filteredItems ao carregar do LocalStorage
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          // Inicializar filteredItems com todos os items
-          state.filteredItems = state.items || [];
-          
-          // Reaplicar filtros se existirem
-          if (state.activeFilters && Object.keys(state.activeFilters).length > 0) {
-            let filtered = [...state.items];
-            
-            // Filtro por classe ABC
-            if (state.activeFilters.classABC && state.activeFilters.classABC.length > 0) {
-              filtered = filtered.filter((item) =>
-                state.activeFilters.classABC!.includes(item.classification!)
-              );
-            }
-            
-            // Filtro por range de valor
-            if (state.activeFilters.valueRange) {
-              const [min, max] = state.activeFilters.valueRange;
-              filtered = filtered.filter(
-                (item) => item.totalValue >= min && item.totalValue <= max
-              );
-            }
-            
-            // Filtro de busca textual
-            if (state.activeFilters.searchQuery) {
-              const query = state.activeFilters.searchQuery.toLowerCase();
-              filtered = filtered.filter(
-                (item) =>
-                  item.name.toLowerCase().includes(query) ||
-                  (item.code && item.code.toLowerCase().includes(query)) ||
-                  (item.supplier && item.supplier.toLowerCase().includes(query)) ||
-                  item.id.toLowerCase().includes(query)
-              );
-            }
-            
-            // Filtro por categoria
-            if (state.activeFilters.category) {
-              filtered = filtered.filter(
-                (item) => item.category === state.activeFilters.category
-              );
-            }
-            
-            // Filtro por fornecedor
-            if (state.activeFilters.supplier) {
-              filtered = filtered.filter(
-                (item) => item.supplier === state.activeFilters.supplier
-              );
-            }
-            
-            // Filtro por setor
-            if (state.activeFilters.sector) {
-              filtered = filtered.filter(
-                (item) => item.requestingSector === state.activeFilters.sector
-              );
-            }
-            
-            // Filtro por criticidade
-            if (state.activeFilters.criticality) {
-              filtered = filtered.filter(
-                (item) => item.clinicalCriticality === state.activeFilters.criticality
-              );
-            }
-            
-            // Filtro por lead time
-            if (state.activeFilters.leadTimeRange) {
-              const [min, max] = state.activeFilters.leadTimeRange;
-              filtered = filtered.filter(
-                (item) => item.leadTime !== undefined && item.leadTime >= min && item.leadTime <= max
-              );
-            }
-            
-            // Filtro por status de estoque
-            if (state.activeFilters.stockFilter) {
-              if (state.activeFilters.stockFilter === 'needsReorder') {
-                filtered = filtered.filter((item) => item.needsReorder === true);
-              } else if (state.activeFilters.stockFilter === 'belowMin') {
-                filtered = filtered.filter(
-                  (item) => item.currentStock !== undefined && 
-                           item.minStock !== undefined && 
-                           item.currentStock < item.minStock
-                );
-              }
-            }
-            
-            state.filteredItems = filtered;
-          }
-        }
-      },
+const applyFilterLogic = (items: MedicineItem[], filters: FilterConfig): MedicineItem[] => {
+  let filtered = [...items];
+  
+  if (filters.classABC && filters.classABC.length > 0) {
+    filtered = filtered.filter((item) => filters.classABC!.includes(item.classification!));
+  }
+  
+  if (filters.valueRange) {
+    const [min, max] = filters.valueRange;
+    filtered = filtered.filter((item) => item.totalValue >= min && item.totalValue <= max);
+  }
+  
+  if (filters.searchQuery) {
+    const query = filters.searchQuery.toLowerCase();
+    filtered = filtered.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query) ||
+        (item.code && item.code.toLowerCase().includes(query)) ||
+        (item.supplier && item.supplier.toLowerCase().includes(query)) ||
+        item.id.toLowerCase().includes(query)
+    );
+  }
+  
+  if (filters.category) {
+    filtered = filtered.filter((item) => item.category === filters.category);
+  }
+  
+  if (filters.supplier) {
+    filtered = filtered.filter((item) => item.supplier === filters.supplier);
+  }
+  
+  if (filters.sector) {
+    filtered = filtered.filter((item) => item.requestingSector === filters.sector);
+  }
+  
+  if (filters.criticality) {
+    filtered = filtered.filter((item) => item.clinicalCriticality === filters.criticality);
+  }
+  
+  if (filters.leadTimeRange) {
+    const [min, max] = filters.leadTimeRange;
+    filtered = filtered.filter(
+      (item) => item.leadTime !== undefined && item.leadTime >= min && item.leadTime <= max
+    );
+  }
+  
+  if (filters.stockFilter) {
+    if (filters.stockFilter === 'needsReorder') {
+      filtered = filtered.filter((item) => item.needsReorder === true);
+    } else if (filters.stockFilter === 'belowMin') {
+      filtered = filtered.filter(
+        (item) =>
+          item.currentStock !== undefined &&
+          item.minStock !== undefined &&
+          item.currentStock < item.minStock
+      );
     }
-  )
-);
+  }
+  
+  return filtered;
+};
+
+export const useDataStore = create<DataState>((set, get) => ({
+  items: [],
+  filteredItems: [],
+  activeFilters: {},
+  isLoading: false,
+
+  fetchItems: async () => {
+    set({ isLoading: true });
+    try {
+      const { data, error } = await supabase
+        .from('medicines')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const items = (data || []).map((item) => ({
+        ...item,
+        unitPrice: Number(item.unit_price),
+        totalValue: Number(item.total_value),
+        expirationDate: item.expiration_date ? new Date(item.expiration_date) : undefined,
+        movementDate: item.movement_date ? new Date(item.movement_date) : undefined,
+        lastPurchaseDate: item.last_purchase_date ? new Date(item.last_purchase_date) : undefined,
+      })) as MedicineItem[];
+
+      set({ items, filteredItems: items });
+      get().applyFilters();
+    } catch (error) {
+      console.error('Error fetching medicines:', error);
+      toast.error('Erro ao carregar medicamentos');
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  setItems: (items) => {
+    set({ items, filteredItems: items });
+    get().applyFilters();
+  },
+
+  addItem: async (item) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('medicines')
+        .insert([{
+          ...item,
+          user_id: userData.user.id,
+          unit_price: item.unitPrice,
+          total_value: item.totalValue,
+          expiration_date: item.expirationDate?.toISOString().split('T')[0],
+          movement_date: item.movementDate?.toISOString(),
+          last_purchase_date: item.lastPurchaseDate?.toISOString().split('T')[0],
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newItem = {
+        ...data,
+        unitPrice: Number(data.unit_price),
+        totalValue: Number(data.total_value),
+        expirationDate: data.expiration_date ? new Date(data.expiration_date) : undefined,
+        movementDate: data.movement_date ? new Date(data.movement_date) : undefined,
+        lastPurchaseDate: data.last_purchase_date ? new Date(data.last_purchase_date) : undefined,
+      } as MedicineItem;
+
+      set((state) => ({
+        items: [newItem, ...state.items],
+        filteredItems: [newItem, ...state.items],
+      }));
+      get().applyFilters();
+      toast.success('Medicamento adicionado com sucesso');
+    } catch (error) {
+      console.error('Error adding medicine:', error);
+      toast.error('Erro ao adicionar medicamento');
+    }
+  },
+
+  deleteItem: async (id) => {
+    try {
+      const { error } = await supabase.from('medicines').delete().eq('id', id);
+
+      if (error) throw error;
+
+      set((state) => {
+        const newItems = state.items.filter((item) => item.id !== id);
+        return { items: newItems, filteredItems: newItems };
+      });
+      get().applyFilters();
+      toast.success('Medicamento removido com sucesso');
+    } catch (error) {
+      console.error('Error deleting medicine:', error);
+      toast.error('Erro ao remover medicamento');
+    }
+  },
+
+  updateItem: async (id, updatedItem) => {
+    try {
+      const updateData: any = { ...updatedItem };
+      
+      if (updatedItem.unitPrice !== undefined) updateData.unit_price = updatedItem.unitPrice;
+      if (updatedItem.totalValue !== undefined) updateData.total_value = updatedItem.totalValue;
+      if (updatedItem.expirationDate !== undefined) updateData.expiration_date = updatedItem.expirationDate?.toISOString().split('T')[0];
+      if (updatedItem.movementDate !== undefined) updateData.movement_date = updatedItem.movementDate?.toISOString();
+      if (updatedItem.lastPurchaseDate !== undefined) updateData.last_purchase_date = updatedItem.lastPurchaseDate?.toISOString().split('T')[0];
+      
+      const { data, error } = await supabase
+        .from('medicines')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const updated = {
+        ...data,
+        unitPrice: Number(data.unit_price),
+        totalValue: Number(data.total_value),
+        expirationDate: data.expiration_date ? new Date(data.expiration_date) : undefined,
+        movementDate: data.movement_date ? new Date(data.movement_date) : undefined,
+        lastPurchaseDate: data.last_purchase_date ? new Date(data.last_purchase_date) : undefined,
+      } as MedicineItem;
+
+      set((state) => {
+        const newItems = state.items.map((item) => (item.id === id ? updated : item));
+        return { items: newItems, filteredItems: newItems };
+      });
+      get().applyFilters();
+      toast.success('Medicamento atualizado com sucesso');
+    } catch (error) {
+      console.error('Error updating medicine:', error);
+      toast.error('Erro ao atualizar medicamento');
+    }
+  },
+
+  setActiveFilters: (filters) => {
+    set({ activeFilters: filters });
+    get().applyFilters();
+  },
+
+  applyFilters: () => {
+    const { items, activeFilters } = get();
+    const filtered = applyFilterLogic(items, activeFilters);
+    set({ filteredItems: filtered });
+  },
+
+  clearFilters: () => {
+    set({ activeFilters: {}, filteredItems: get().items });
+  },
+
+  recalculateABC: (config) => {
+    const { items } = get();
+    if (items.length === 0) return;
+
+    const recalculatedItems = recalculateABCInPlace(items, config);
+    set({ items: recalculatedItems, filteredItems: recalculatedItems });
+    get().applyFilters();
+  },
+}));
