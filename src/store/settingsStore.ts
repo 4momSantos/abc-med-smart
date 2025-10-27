@@ -72,6 +72,14 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'settings-storage',
+      onRehydrateStorage: () => (state) => {
+        if (state?.period) {
+          state.period = {
+            startDate: new Date(state.period.startDate),
+            endDate: new Date(state.period.endDate),
+          };
+        }
+      },
     }
   )
 );

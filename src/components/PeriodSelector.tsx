@@ -14,6 +14,15 @@ interface PeriodSelectorProps {
 }
 
 export const PeriodSelector = ({ period, onChange }: PeriodSelectorProps) => {
+  // Garantir que startDate e endDate são objetos Date
+  const safeStartDate = period.startDate instanceof Date 
+    ? period.startDate 
+    : new Date(period.startDate);
+    
+  const safeEndDate = period.endDate instanceof Date 
+    ? period.endDate 
+    : new Date(period.endDate);
+
   const handleLastYear = () => {
     const now = new Date();
     onChange({
@@ -55,8 +64,8 @@ export const PeriodSelector = ({ period, onChange }: PeriodSelectorProps) => {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {period.startDate ? (
-                    format(period.startDate, "PPP", { locale: ptBR })
+                  {safeStartDate ? (
+                    format(safeStartDate, "PPP", { locale: ptBR })
                   ) : (
                     <span>Selecione a data</span>
                   )}
@@ -65,9 +74,10 @@ export const PeriodSelector = ({ period, onChange }: PeriodSelectorProps) => {
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={period.startDate}
+                  selected={safeStartDate}
                   onSelect={(date) => date && onChange({ ...period, startDate: date })}
                   initialFocus
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
@@ -85,8 +95,8 @@ export const PeriodSelector = ({ period, onChange }: PeriodSelectorProps) => {
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {period.endDate ? (
-                    format(period.endDate, "PPP", { locale: ptBR })
+                  {safeEndDate ? (
+                    format(safeEndDate, "PPP", { locale: ptBR })
                   ) : (
                     <span>Selecione a data</span>
                   )}
@@ -95,10 +105,11 @@ export const PeriodSelector = ({ period, onChange }: PeriodSelectorProps) => {
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={period.endDate}
+                  selected={safeEndDate}
                   onSelect={(date) => date && onChange({ ...period, endDate: date })}
-                  disabled={(date) => date < period.startDate}
+                  disabled={(date) => date < safeStartDate}
                   initialFocus
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
@@ -117,10 +128,10 @@ export const PeriodSelector = ({ period, onChange }: PeriodSelectorProps) => {
         <div className="bg-muted/50 p-3 rounded-lg text-sm">
           <p className="font-medium mb-1">Período Selecionado:</p>
           <p className="text-muted-foreground">
-            {format(period.startDate, "dd/MM/yyyy")} até {format(period.endDate, "dd/MM/yyyy")}
+            {format(safeStartDate, "dd/MM/yyyy")} até {format(safeEndDate, "dd/MM/yyyy")}
           </p>
           <p className="text-muted-foreground text-xs mt-1">
-            ({Math.ceil((period.endDate.getTime() - period.startDate.getTime()) / (1000 * 60 * 60 * 24))} dias)
+            ({Math.ceil((safeEndDate.getTime() - safeStartDate.getTime()) / (1000 * 60 * 60 * 24))} dias)
           </p>
         </div>
       </CardContent>
