@@ -1,5 +1,4 @@
 import { MedicineItem } from "@/components/MedicineForm";
-import { Card } from "@/components/ui/card";
 import Plot from "react-plotly.js";
 
 interface HeatmapChartProps {
@@ -42,28 +41,25 @@ export const HeatmapChart = ({ items, title = "Mapa de Calor: Valor por Criticid
   ];
 
   return (
-    <Card className="p-6 shadow-[var(--shadow-medium)]">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">{title}</h3>
-      <Plot
-        data={data}
-        layout={{
-          autosize: true,
-          paper_bgcolor: "transparent",
-          plot_bgcolor: "transparent",
-          font: { color: "hsl(var(--foreground))" },
-          margin: { t: 20, b: 60, l: 80, r: 100 },
-          xaxis: {
-            title: "Classe ABC",
-            color: "hsl(var(--foreground))"
-          },
-          yaxis: {
-            title: "Criticidade Clínica",
-            color: "hsl(var(--foreground))"
-          }
-        }}
-        config={{ responsive: true, displayModeBar: false }}
-        style={{ width: "100%", height: "350px" }}
-      />
-    </Card>
+    <Plot
+      data={data}
+      layout={{
+        autosize: true,
+        paper_bgcolor: "transparent",
+        plot_bgcolor: "transparent",
+        font: { color: "hsl(var(--foreground))" },
+        margin: { t: 20, b: 60, l: 80, r: 100 },
+        xaxis: {
+          title: "Classe ABC",
+          color: "hsl(var(--foreground))"
+        },
+        yaxis: {
+          title: "Criticidade Clínica",
+          color: "hsl(var(--foreground))"
+        }
+      }}
+      config={{ responsive: true, displayModeBar: false }}
+      style={{ width: "100%", height: "350px" }}
+    />
   );
 };

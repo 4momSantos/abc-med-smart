@@ -1,5 +1,4 @@
 import { MedicineItem } from "@/components/MedicineForm";
-import { Card } from "@/components/ui/card";
 import Plot from "react-plotly.js";
 
 interface SunburstChartProps {
@@ -58,27 +57,24 @@ export const SunburstChart = ({ items, title = "Hierarquia Circular de Valor" }:
   ];
 
   return (
-    <Card className="p-6 shadow-[var(--shadow-medium)]">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">{title}</h3>
-      <Plot
-        data={data}
-        layout={{
-          autosize: true,
-          paper_bgcolor: "transparent",
-          plot_bgcolor: "transparent",
-          font: { color: "hsl(var(--foreground))" },
-          margin: { t: 0, b: 0, l: 0, r: 0 },
-          sunburstcolorway: [
-            "hsl(var(--chart-1))",
-            "hsl(var(--chart-2))",
-            "hsl(var(--chart-3))",
-            "hsl(var(--chart-4))",
-            "hsl(var(--chart-5))"
-          ]
-        }}
-        config={{ responsive: true, displayModeBar: false }}
-        style={{ width: "100%", height: "450px" }}
-      />
-    </Card>
+    <Plot
+      data={data}
+      layout={{
+        autosize: true,
+        paper_bgcolor: "transparent",
+        plot_bgcolor: "transparent",
+        font: { color: "hsl(var(--foreground))" },
+        margin: { t: 0, b: 0, l: 0, r: 0 },
+        sunburstcolorway: [
+          "hsl(var(--chart-1))",
+          "hsl(var(--chart-2))",
+          "hsl(var(--chart-3))",
+          "hsl(var(--chart-4))",
+          "hsl(var(--chart-5))"
+        ]
+      }}
+      config={{ responsive: true, displayModeBar: false }}
+      style={{ width: "100%", height: "450px" }}
+    />
   );
 };

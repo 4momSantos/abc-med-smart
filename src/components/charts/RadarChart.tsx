@@ -1,5 +1,4 @@
 import { MedicineItem } from "@/components/MedicineForm";
-import { Card } from "@/components/ui/card";
 import { Radar, RadarChart as RechartsRadar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend, ResponsiveContainer } from "recharts";
 
 interface RadarChartProps {
@@ -56,19 +55,16 @@ export const RadarChart = ({ items, title = "Perfil Multidimensional por Classe"
   ];
 
   return (
-    <Card className="p-6 shadow-[var(--shadow-medium)]">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">{title}</h3>
-      <ResponsiveContainer width="100%" height={400}>
-        <RechartsRadar data={data}>
-          <PolarGrid stroke="hsl(var(--border))" />
-          <PolarAngleAxis dataKey="subject" tick={{ fill: "hsl(var(--foreground))" }} />
-          <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: "hsl(var(--muted-foreground))" }} />
-          <Radar name="Classe A" dataKey="A" stroke="hsl(var(--chart-1))" fill="hsl(var(--chart-1))" fillOpacity={0.6} />
-          <Radar name="Classe B" dataKey="B" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.6} />
-          <Radar name="Classe C" dataKey="C" stroke="hsl(var(--chart-3))" fill="hsl(var(--chart-3))" fillOpacity={0.6} />
-          <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
-        </RechartsRadar>
-      </ResponsiveContainer>
-    </Card>
+    <ResponsiveContainer width="100%" height={400}>
+      <RechartsRadar data={data}>
+        <PolarGrid stroke="hsl(var(--border))" />
+        <PolarAngleAxis dataKey="subject" tick={{ fill: "hsl(var(--foreground))" }} />
+        <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+        <Radar name="Classe A" dataKey="A" stroke="hsl(var(--chart-1))" fill="hsl(var(--chart-1))" fillOpacity={0.6} />
+        <Radar name="Classe B" dataKey="B" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.6} />
+        <Radar name="Classe C" dataKey="C" stroke="hsl(var(--chart-3))" fill="hsl(var(--chart-3))" fillOpacity={0.6} />
+        <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
+      </RechartsRadar>
+    </ResponsiveContainer>
   );
 };

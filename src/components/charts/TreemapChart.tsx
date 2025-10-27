@@ -1,5 +1,4 @@
 import { MedicineItem } from "@/components/MedicineForm";
-import { Card } from "@/components/ui/card";
 import Plot from "react-plotly.js";
 
 interface TreemapChartProps {
@@ -40,20 +39,17 @@ export const TreemapChart = ({ items, title = "Hierarquia de Valor por Item" }: 
   ];
 
   return (
-    <Card className="p-6 shadow-[var(--shadow-medium)]">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">{title}</h3>
-      <Plot
-        data={data}
-        layout={{
-          autosize: true,
-          paper_bgcolor: "transparent",
-          plot_bgcolor: "transparent",
-          font: { color: "hsl(var(--foreground))", size: 10 },
-          margin: { t: 0, b: 0, l: 0, r: 0 }
-        }}
-        config={{ responsive: true, displayModeBar: false }}
-        style={{ width: "100%", height: "450px" }}
-      />
-    </Card>
+    <Plot
+      data={data}
+      layout={{
+        autosize: true,
+        paper_bgcolor: "transparent",
+        plot_bgcolor: "transparent",
+        font: { color: "hsl(var(--foreground))", size: 10 },
+        margin: { t: 0, b: 0, l: 0, r: 0 }
+      }}
+      config={{ responsive: true, displayModeBar: false }}
+      style={{ width: "100%", height: "450px" }}
+    />
   );
 };

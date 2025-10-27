@@ -1,5 +1,4 @@
 import { MedicineItem } from "@/components/MedicineForm";
-import { Card } from "@/components/ui/card";
 import Plot from "react-plotly.js";
 
 interface FunnelChartProps {
@@ -36,20 +35,17 @@ export const FunnelChart = ({ items, title = "Funil de Classificação ABC" }: F
   ];
 
   return (
-    <Card className="p-6 shadow-[var(--shadow-medium)]">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">{title}</h3>
-      <Plot
-        data={data}
-        layout={{
-          autosize: true,
-          paper_bgcolor: "transparent",
-          plot_bgcolor: "transparent",
-          font: { color: "hsl(var(--foreground))" },
-          margin: { t: 20, b: 40, l: 100, r: 40 }
-        }}
-        config={{ responsive: true, displayModeBar: false }}
-        style={{ width: "100%", height: "400px" }}
-      />
-    </Card>
+    <Plot
+      data={data}
+      layout={{
+        autosize: true,
+        paper_bgcolor: "transparent",
+        plot_bgcolor: "transparent",
+        font: { color: "hsl(var(--foreground))" },
+        margin: { t: 20, b: 40, l: 100, r: 40 }
+      }}
+      config={{ responsive: true, displayModeBar: false }}
+      style={{ width: "100%", height: "400px" }}
+    />
   );
 };

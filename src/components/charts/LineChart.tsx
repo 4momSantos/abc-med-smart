@@ -1,5 +1,4 @@
 import { MedicineItem } from "@/components/MedicineForm";
-import { Card } from "@/components/ui/card";
 import Plot from "react-plotly.js";
 
 interface LineChartProps {
@@ -61,33 +60,30 @@ export const LineChart = ({ items, title = "Curva de Valor Acumulado" }: LineCha
   ];
 
   return (
-    <Card className="p-6 shadow-[var(--shadow-medium)]">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">{title}</h3>
-      <Plot
-        data={data}
-        layout={{
-          autosize: true,
-          paper_bgcolor: "transparent",
-          plot_bgcolor: "transparent",
-          font: { color: "hsl(var(--foreground))" },
-          margin: { t: 20, b: 60, l: 60, r: 20 },
-          xaxis: {
-            title: "Itens (ordenados por valor)",
-            gridcolor: "hsl(var(--border))",
-            color: "hsl(var(--foreground))"
-          },
-          yaxis: {
-            title: "Percentual Acumulado (%)",
-            gridcolor: "hsl(var(--border))",
-            color: "hsl(var(--foreground))",
-            range: [0, 105]
-          },
-          shapes,
-          showlegend: false
-        }}
-        config={{ responsive: true, displayModeBar: false }}
-        style={{ width: "100%", height: "400px" }}
-      />
-    </Card>
+    <Plot
+      data={data}
+      layout={{
+        autosize: true,
+        paper_bgcolor: "transparent",
+        plot_bgcolor: "transparent",
+        font: { color: "hsl(var(--foreground))" },
+        margin: { t: 20, b: 60, l: 60, r: 20 },
+        xaxis: {
+          title: "Itens (ordenados por valor)",
+          gridcolor: "hsl(var(--border))",
+          color: "hsl(var(--foreground))"
+        },
+        yaxis: {
+          title: "Percentual Acumulado (%)",
+          gridcolor: "hsl(var(--border))",
+          color: "hsl(var(--foreground))",
+          range: [0, 105]
+        },
+        shapes,
+        showlegend: false
+      }}
+      config={{ responsive: true, displayModeBar: false }}
+      style={{ width: "100%", height: "400px" }}
+    />
   );
 };

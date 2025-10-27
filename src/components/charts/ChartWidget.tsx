@@ -159,7 +159,7 @@ export const ChartWidget = ({
       </CardHeader>
 
       <CardContent>
-        <ChartComponent items={items} title="" />
+        <ChartComponent items={items} />
       </CardContent>
     </Card>
   );

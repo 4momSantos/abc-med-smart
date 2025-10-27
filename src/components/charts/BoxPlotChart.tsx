@@ -1,5 +1,4 @@
 import { MedicineItem } from "@/components/MedicineForm";
-import { Card } from "@/components/ui/card";
 import Plot from "react-plotly.js";
 
 interface BoxPlotChartProps {
@@ -37,32 +36,29 @@ export const BoxPlotChart = ({ items, title = "Distribuição de Preços por Cla
   ];
 
   return (
-    <Card className="p-6 shadow-[var(--shadow-medium)]">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">{title}</h3>
-      <Plot
-        data={data}
-        layout={{
-          autosize: true,
-          paper_bgcolor: "transparent",
-          plot_bgcolor: "transparent",
-          font: { color: "hsl(var(--foreground))" },
-          margin: { t: 20, b: 60, l: 60, r: 40 },
-          yaxis: { 
-            title: "Preço Unitário (R$)",
-            gridcolor: "hsl(var(--border))"
-          },
-          showlegend: true,
-          legend: {
-            orientation: "h",
-            yanchor: "bottom",
-            y: -0.3,
-            xanchor: "center",
-            x: 0.5
-          }
-        }}
-        config={{ responsive: true, displayModeBar: false }}
-        style={{ width: "100%", height: "400px" }}
-      />
-    </Card>
+    <Plot
+      data={data}
+      layout={{
+        autosize: true,
+        paper_bgcolor: "transparent",
+        plot_bgcolor: "transparent",
+        font: { color: "hsl(var(--foreground))" },
+        margin: { t: 20, b: 60, l: 60, r: 40 },
+        yaxis: { 
+          title: "Preço Unitário (R$)",
+          gridcolor: "hsl(var(--border))"
+        },
+        showlegend: true,
+        legend: {
+          orientation: "h",
+          yanchor: "bottom",
+          y: -0.3,
+          xanchor: "center",
+          x: 0.5
+        }
+      }}
+      config={{ responsive: true, displayModeBar: false }}
+      style={{ width: "100%", height: "400px" }}
+    />
   );
 };

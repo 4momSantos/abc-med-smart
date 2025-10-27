@@ -1,5 +1,4 @@
 import { MedicineItem } from "@/components/MedicineForm";
-import { Card } from "@/components/ui/card";
 import Plot from "react-plotly.js";
 
 interface PieChartProps {
@@ -26,28 +25,25 @@ export const PieChart = ({ items, title = "Distribuição por Classe ABC" }: Pie
   ];
 
   return (
-    <Card className="p-6 shadow-[var(--shadow-medium)]">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">{title}</h3>
-      <Plot
-        data={data}
-        layout={{
-          autosize: true,
-          paper_bgcolor: "transparent",
-          plot_bgcolor: "transparent",
-          font: { color: "hsl(var(--foreground))" },
-          margin: { t: 0, b: 0, l: 0, r: 0 },
-          showlegend: true,
-          legend: {
-            orientation: "h",
-            yanchor: "bottom",
-            y: -0.2,
-            xanchor: "center",
-            x: 0.5
-          }
-        }}
-        config={{ responsive: true, displayModeBar: false }}
-        style={{ width: "100%", height: "350px" }}
-      />
-    </Card>
+    <Plot
+      data={data}
+      layout={{
+        autosize: true,
+        paper_bgcolor: "transparent",
+        plot_bgcolor: "transparent",
+        font: { color: "hsl(var(--foreground))" },
+        margin: { t: 0, b: 0, l: 0, r: 0 },
+        showlegend: true,
+        legend: {
+          orientation: "h",
+          yanchor: "bottom",
+          y: -0.2,
+          xanchor: "center",
+          x: 0.5
+        }
+      }}
+      config={{ responsive: true, displayModeBar: false }}
+      style={{ width: "100%", height: "350px" }}
+    />
   );
 };
