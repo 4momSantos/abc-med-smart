@@ -58,9 +58,36 @@ export const useOrganizationStore = create<OrganizationState>((set, get) => ({
     const org = organizations.find(o => o.id === orgId);
     
     if (org) {
-      set({ currentOrganization: org });
-      localStorage.setItem('currentOrganizationId', orgId);
-      toast.success(`Organização alterada para: ${org.name}`);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Usuário não autenticado');
+
+        // Desativar todas as organizações do usuário
+        await supabase
+          .from('organization_members')
+          .update({ is_active: false })
+          .eq('user_id', user.id);
+
+        // Ativar apenas a organização selecionada
+        const { error } = await supabase
+          .from('organization_members')
+          .update({ is_active: true })
+          .eq('user_id', user.id)
+          .eq('organization_id', orgId);
+
+        if (error) throw error;
+
+        set({ currentOrganization: org });
+        localStorage.setItem('currentOrganizationId', orgId);
+        
+        toast.success(`Organização alterada para: ${org.name}`);
+        
+        // Recarregar dados após trocar organização
+        window.location.reload();
+      } catch (error) {
+        console.error('Error setting organization:', error);
+        toast.error('Erro ao trocar organização');
+      }
     }
   },
 

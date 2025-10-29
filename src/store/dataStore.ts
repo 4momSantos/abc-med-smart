@@ -111,12 +111,40 @@ export const useDataStore = create<DataState>((set, get) => ({
   fetchItems: async () => {
     set({ isLoading: true });
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        set({ items: [], filteredItems: [], isLoading: false });
+        toast.error('Usuário não autenticado');
+        return;
+      }
+
+      // Obter organização ativa do usuário
+      const { data: orgId, error: orgError } = await supabase
+        .rpc('get_user_active_org', { _user_id: user.id });
+
+      console.log('🔍 Fetching items for organization:', orgId);
+
+      if (orgError || !orgId) {
+        console.warn('⚠️ No active organization found');
+        toast.error('Nenhuma organização ativa. Selecione uma organização.');
+        set({ items: [], filteredItems: [], isLoading: false });
+        return;
+      }
+
+      // Buscar medicamentos com filtro de organização
       const { data, error } = await supabase
         .from('medicines')
         .select('*')
+        .eq('organization_id', orgId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      console.log('📊 Found items:', data?.length || 0);
+
+      if (!data || data.length === 0) {
+        toast.info('Nenhum medicamento encontrado nesta organização');
+      }
 
       // Desempacotar estrutura híbrida (campos principais + extra_data JSONB)
       const items = (data || []).map((row) => {

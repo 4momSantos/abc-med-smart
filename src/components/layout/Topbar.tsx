@@ -53,7 +53,7 @@ const getRoleLabel = (role: string | null) => {
 export const Topbar = () => {
   const location = useLocation();
   const { toggleSidebar } = useUIStore();
-  const { user, userRole, signOut, refreshRole } = useAuth();
+  const { user, userRole, signOut, refreshRole, currentOrganization } = useAuth();
   const breadcrumbs = breadcrumbMap[location.pathname] || ['Dashboard'];
 
   const userInitials = user?.email
@@ -97,6 +97,13 @@ export const Topbar = () => {
             </div>
           ))}
         </nav>
+
+        {/* Organization Indicator */}
+        {currentOrganization && (
+          <Badge variant="outline" className="hidden md:flex ml-4">
+            📊 {currentOrganization.name}
+          </Badge>
+        )}
       </div>
 
       {/* Center Section - Search */}
