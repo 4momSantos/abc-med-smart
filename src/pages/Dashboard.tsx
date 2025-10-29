@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, DollarSign, TrendingUp, AlertTriangle, Info } from 'lucide-react';
-import { useDataStore } from '@/store/dataStore';
+import { useMedicineOperations } from '@/lib/queries/medicineQueries';
 import { useMLStore } from '@/store/mlStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useAuth } from '@/contexts/AuthContext';
 import { FilterBar } from '@/components/shared/FilterBar';
 import { ABCTable } from '@/components/ABCTable';
 import { ABCSummary } from '@/components/ABCSummary';
@@ -49,7 +50,8 @@ const aggregateByCategory = (items: MedicineItem[]): MedicineItem[] => {
 };
 
 export default function Dashboard() {
-  const { filteredItems } = useDataStore();
+  const { currentOrganization } = useAuth();
+  const { medicines: filteredItems, kpis, isLoading } = useMedicineOperations(currentOrganization?.id);
   const { anomalies } = useMLStore();
   const { abcConfig, period } = useSettingsStore();
   const [currentPage, setCurrentPage] = useState(1);
@@ -99,6 +101,22 @@ export default function Dashboard() {
   }, [filteredItems, currentPage]);
 
   const totalPages = Math.ceil(filteredItems.length / MAX_TABLE_ITEMS);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
+          <div className="h-4 bg-muted rounded w-1/2"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 bg-muted rounded animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

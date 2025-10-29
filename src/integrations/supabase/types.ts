@@ -207,6 +207,8 @@ export type Database = {
           classification: string | null
           code: string | null
           created_at: string | null
+          deleted_at: string | null
+          description: string | null
           extra_data: Json | null
           id: string
           name: string
@@ -221,6 +223,8 @@ export type Database = {
           classification?: string | null
           code?: string | null
           created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
           extra_data?: Json | null
           id?: string
           name: string
@@ -235,6 +239,8 @@ export type Database = {
           classification?: string | null
           code?: string | null
           created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
           extra_data?: Json | null
           id?: string
           name?: string
@@ -545,7 +551,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      medicine_kpis: {
+        Row: {
+          avg_price: number | null
+          class_a_count: number | null
+          class_a_value: number | null
+          class_b_count: number | null
+          class_b_value: number | null
+          class_c_count: number | null
+          class_c_value: number | null
+          last_updated: string | null
+          max_price: number | null
+          median_price: number | null
+          min_price: number | null
+          organization_id: string | null
+          total_items: number | null
+          total_value: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicines_new_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_user_active_org: { Args: { _user_id: string }; Returns: string }
@@ -582,6 +614,35 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      search_medicines: {
+        Args: { limit_results?: number; org_id: string; search_term: string }
+        Returns: {
+          classification: string | null
+          code: string | null
+          created_at: string | null
+          deleted_at: string | null
+          description: string | null
+          extra_data: Json | null
+          id: string
+          name: string
+          organization_id: string
+          quantity: number
+          total_value: number
+          unit_price: number
+          updated_at: string | null
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "medicines"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      soft_delete_medicine: {
+        Args: { medicine_id: string }
+        Returns: undefined
       }
       user_belongs_to_org: {
         Args: { _org_id: string; _user_id: string }

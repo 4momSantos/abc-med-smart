@@ -27,7 +27,20 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useSettingsStore } from "./store/settingsStore";
 import { applyVisualPreferences } from "./lib/themeUtils";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 2 * 60 * 1000, // 2 minutos
+      gcTime: 10 * 60 * 1000, // 10 minutos (era cacheTime no v4)
+      refetchOnWindowFocus: false,
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 const AppContent = () => {
   const visualPreferences = useSettingsStore((state) => state.visualPreferences);
