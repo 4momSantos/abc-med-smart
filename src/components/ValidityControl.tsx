@@ -1,13 +1,15 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Calendar, 
   AlertTriangle, 
   CheckCircle2, 
   XCircle,
-  Clock
+  Clock,
+  X
 } from 'lucide-react';
 import { MedicineItem } from '@/types/medicine';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, CartesianGrid, XAxis, YAxis } from 'recharts';
@@ -85,6 +87,8 @@ const getStatusBadge = (status: string, daysUntilExpiry?: number) => {
 };
 
 export const ValidityControl = ({ items }: ValidityControlProps) => {
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+
   const validityData = useMemo(() => {
     const stats = {
       expired: 0,
@@ -100,6 +104,7 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
       }
     };
 
+    const allItemsWithStatus: Array<MedicineItem & { status: string; daysUntilExpiry: number }> = [];
     const criticalItems: Array<MedicineItem & { status: string; daysUntilExpiry: number }> = [];
     const monthlyExpiration: Record<string, number> = {};
 
@@ -119,6 +124,11 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
         stats.totalValue.valid += item.totalValue;
       }
 
+      // Adicionar todos os itens com status
+      if (status !== 'unknown') {
+        allItemsWithStatus.push({ ...item, status, daysUntilExpiry });
+      }
+
       if (status === 'expired' || status === 'expiresSoon') {
         criticalItems.push({ ...item, status, daysUntilExpiry });
       }
@@ -132,6 +142,7 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
 
     // Sort critical items by days until expiry
     criticalItems.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+    allItemsWithStatus.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
 
     // Preparar dados do gráfico de barras mensal
     const monthlyData = Object.entries(monthlyExpiration)
@@ -143,8 +154,27 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
         return { month: monthName, count };
       });
 
-    return { stats, criticalItems: criticalItems.slice(0, 10), monthlyData };
+    return { stats, criticalItems: criticalItems.slice(0, 10), allItemsWithStatus, monthlyData };
   }, [items]);
+
+  // Filtrar itens baseado na seleção
+  const filteredItems = useMemo(() => {
+    if (!selectedStatus) {
+      return validityData.criticalItems;
+    }
+    return validityData.allItemsWithStatus.filter(item => item.status === selectedStatus);
+  }, [selectedStatus, validityData]);
+
+  const handlePieClick = (data: any) => {
+    const statusMap: Record<string, string> = {
+      'Vencidos': 'expired',
+      'Vence em 30 dias': 'expiresSoon',
+      'Vence em 90 dias': 'expiring',
+      'Válidos': 'valid'
+    };
+    const status = statusMap[data.name];
+    setSelectedStatus(selectedStatus === status ? null : status);
+  };
 
   const chartData = [
     { name: 'Vencidos', value: validityData.stats.expired, color: COLORS.expired },
@@ -154,7 +184,17 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
   ].filter(d => d.value > 0);
 
   const hasValidityData = items.some(item => item.expirationDate);
-  const hasCriticalItems = validityData.criticalItems.length > 0;
+  const hasItemsToShow = filteredItems.length > 0;
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      'expired': 'Vencidos',
+      'expiresSoon': 'Vence em 30 dias',
+      'expiring': 'Vence em 90 dias',
+      'valid': 'Válidos'
+    };
+    return labels[status] || status;
+  };
 
   if (!hasValidityData) {
     return (
@@ -272,9 +312,15 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
+                  onClick={handlePieClick}
+                  style={{ cursor: 'pointer' }}
                 >
                   {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.color}
+                      opacity={selectedStatus && selectedStatus !== entry.name.toLowerCase().replace(/\s+/g, '') ? 0.3 : 1}
+                    />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -324,13 +370,32 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
         )}
       </div>
 
-      {/* Critical Items Table */}
-      {hasCriticalItems && (
+      {/* Items Table */}
+      {hasItemsToShow && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-warning" />
-              Itens Críticos (Top 10)
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-warning" />
+                {selectedStatus ? (
+                  <>
+                    {getStatusLabel(selectedStatus)} ({filteredItems.length} itens)
+                  </>
+                ) : (
+                  <>Itens Críticos (Top 10)</>
+                )}
+              </div>
+              {selectedStatus && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedStatus(null)}
+                  className="gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Limpar filtro
+                </Button>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -344,7 +409,7 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {validityData.criticalItems.map((item) => (
+                {filteredItems.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
                       {item.name}
