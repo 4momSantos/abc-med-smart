@@ -169,13 +169,13 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           label="Valor Total"
-          value={`R$ ${(stats.totalValue / 1000).toFixed(0)}k`}
+          value={stats.totalValue.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+          })}
           icon={<DollarSign className="w-5 h-5" />}
-          trend={{
-            value: 12.5,
-            direction: 'up',
-            label: 'vs mês anterior'
-          }}
           color="success"
         />
         
@@ -183,10 +183,6 @@ export default function Dashboard() {
           label="Total de Itens"
           value={filteredItems.length.toLocaleString()}
           icon={<Package className="w-5 h-5" />}
-          trend={{
-            value: 2.3,
-            direction: 'down'
-          }}
           color="default"
         />
 
@@ -199,13 +195,8 @@ export default function Dashboard() {
 
         <KPICard
           label="Rotatividade Média"
-          value={`${stats.avgRotatividade.toFixed(1)}x`}
+          value={`${stats.avgRotatividade.toFixed(1)}x/ano`}
           icon={<Activity className="w-5 h-5" />}
-          trend={{
-            value: 8.2,
-            direction: 'up',
-            label: 'Por ano'
-          }}
           color="default"
         />
       </div>

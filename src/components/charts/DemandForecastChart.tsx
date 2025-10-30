@@ -18,25 +18,50 @@ interface DemandForecastChartProps {
 
 export const DemandForecastChart = ({ items }: DemandForecastChartProps) => {
   const chartData = useMemo(() => {
-    // Gerar dados históricos e previsão baseados nos itens
-    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-    const baseValue = totalQuantity / items.length || 4500;
+    // Agrupar itens por mês usando movementDate
+    const itemsByMonth = new Map<string, number>();
     
-    // Últimos 3 meses (real)
-    const historicalData = [
-      { month: 'Nov', real: baseValue * 0.9, previsto: baseValue * 0.88, min: baseValue * 0.84, max: baseValue * 0.92 },
-      { month: 'Dez', real: baseValue * 1.04, previsto: baseValue * 1.02, min: baseValue * 0.98, max: baseValue * 1.06 },
-      { month: 'Jan', real: baseValue * 0.96, previsto: baseValue * 0.98, min: baseValue * 0.94, max: baseValue * 1.02 },
-    ];
+    items.forEach(item => {
+      if (item.movementDate) {
+        const date = new Date(item.movementDate);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        itemsByMonth.set(monthKey, (itemsByMonth.get(monthKey) || 0) + item.quantity);
+      }
+    });
+
+    // Se não houver dados históricos, usar quantidade média
+    if (itemsByMonth.size === 0) {
+      const avgQuantity = items.reduce((sum, item) => sum + item.quantity, 0) / items.length || 0;
+      const months = ['Nov', 'Dez', 'Jan', 'Fev', 'Mar', 'Abr'];
+      return months.map((month, i) => ({
+        month,
+        real: i < 3 ? avgQuantity : undefined,
+        previsto: avgQuantity,
+        min: avgQuantity * 0.85,
+        max: avgQuantity * 1.15,
+      }));
+    }
+
+    // Usar dados reais quando disponíveis
+    const sortedMonths = Array.from(itemsByMonth.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-6);
+
+    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     
-    // Próximos 3 meses (previsão)
-    const forecastData = [
-      { month: 'Fev', previsto: baseValue * 1.06, min: baseValue * 1.00, max: baseValue * 1.12 },
-      { month: 'Mar', previsto: baseValue * 1.10, min: baseValue * 1.04, max: baseValue * 1.16 },
-      { month: 'Abr', previsto: baseValue * 1.02, min: baseValue * 0.96, max: baseValue * 1.08 },
-    ];
-    
-    return [...historicalData, ...forecastData];
+    return sortedMonths.map(([monthKey, quantity], i) => {
+      const [year, month] = monthKey.split('-');
+      const monthName = monthNames[parseInt(month) - 1];
+      const isHistorical = i < 3;
+      
+      return {
+        month: monthName,
+        real: isHistorical ? quantity : undefined,
+        previsto: quantity,
+        min: quantity * 0.9,
+        max: quantity * 1.1,
+      };
+    });
   }, [items]);
 
   return (
