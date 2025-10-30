@@ -213,11 +213,8 @@ export const useDataStore = create<DataState>((set, get) => ({
         } as MedicineItem;
       });
 
-      // IMPORTANTE: Recalcular ABC dinamicamente com a config atual
-      const { abcConfig } = useSettingsStore.getState();
-      const classifiedItems = calculateABCClassification(items, abcConfig);
-
-      set({ items: classifiedItems, filteredItems: classifiedItems });
+      // Usar dados reais do banco sem recalcular
+      set({ items, filteredItems: items });
       get().applyFilters();
     } catch (error) {
       console.error('Error fetching medicines:', error);
