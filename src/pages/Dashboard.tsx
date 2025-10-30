@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, DollarSign, TrendingUp, AlertTriangle, Info, Activity } from 'lucide-react';
-import { useMedicineOperations } from '@/lib/queries/medicineQueries';
+import { useDataStore } from '@/store/dataStore';
 import { useMLStore } from '@/store/mlStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,10 +58,17 @@ const aggregateByCategory = (items: MedicineItem[]): MedicineItem[] => {
 
 export default function Dashboard() {
   const { currentOrganization } = useAuth();
-  const { medicines: filteredItems, kpis, isLoading } = useMedicineOperations(currentOrganization?.id);
+  const { items, filteredItems, isLoading, fetchItems } = useDataStore();
   const { anomalies } = useMLStore();
   const { abcConfig, period } = useSettingsStore();
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Buscar itens quando a organização mudar
+  React.useEffect(() => {
+    if (currentOrganization?.id) {
+      fetchItems();
+    }
+  }, [currentOrganization?.id, fetchItems]);
 
   // Performance: Detectar grandes datasets
   const isLargeDataset = filteredItems.length > 1000;
