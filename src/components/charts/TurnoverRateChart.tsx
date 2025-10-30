@@ -16,16 +16,18 @@ interface TurnoverRateChartProps {
 
 export const TurnoverRateChart = ({ items }: TurnoverRateChartProps) => {
   const chartData = useMemo(() => {
-    // Calcular rotatividade (giros por ano)
-    const itemsWithTurnover = items.map(item => {
-      const currentStock = item.currentStock || item.quantity || 1;
-      const rotatividade = (item.quantity / currentStock) * 12; // Giros por ano
-      
-      return {
-        ...item,
-        rotatividade: rotatividade > 0 ? rotatividade : Math.random() * 30,
-      };
-    });
+    // Calcular rotatividade (giros por ano) apenas com dados válidos
+    const itemsWithTurnover = items
+      .map(item => {
+        const currentStock = item.currentStock || item.quantity || 1;
+        const rotatividade = (item.quantity / currentStock) * 12; // Giros por ano
+        
+        return {
+          ...item,
+          rotatividade,
+        };
+      })
+      .filter(item => item.rotatividade > 0); // Apenas itens com rotatividade válida
 
     // Ordenar por rotatividade e pegar top 20
     return itemsWithTurnover

@@ -23,11 +23,13 @@ const ABC_COLORS = {
 
 export const StockDaysChart = ({ items }: StockDaysChartProps) => {
   const chartData = useMemo(() => {
-    // Calcular dias de estoque baseado em leadTime ou valor padrão
-    const itemsWithDays = items.map(item => ({
-      ...item,
-      estoqueDias: item.leadTime || Math.floor((item.quantity / (item.unitPrice || 1)) * 30) || 30,
-    }));
+    // Calcular dias de estoque apenas com dados reais (leadTime)
+    const itemsWithDays = items
+      .filter(item => item.leadTime && item.leadTime > 0) // Apenas itens com leadTime válido
+      .map(item => ({
+        ...item,
+        estoqueDias: item.leadTime!,
+      }));
 
     // Ordenar por dias de estoque e pegar top 20
     return itemsWithDays
