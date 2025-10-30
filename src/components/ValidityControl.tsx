@@ -9,7 +9,8 @@ import {
   CheckCircle2, 
   XCircle,
   Clock,
-  X
+  X,
+  Eye
 } from 'lucide-react';
 import { MedicineItem } from '@/types/medicine';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, CartesianGrid, XAxis, YAxis } from 'recharts';
@@ -409,6 +410,7 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
                   <TableHead>Validade</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -443,6 +445,21 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(item.status, item.daysUntilExpiry)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedItem(item);
+                          setIsDialogOpen(true);
+                        }}
+                        className="h-8 w-8 p-0"
+                        title="Ver detalhes"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
