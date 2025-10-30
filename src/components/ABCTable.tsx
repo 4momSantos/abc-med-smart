@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { MedicineItem, UNITS } from "./MedicineForm";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, Download } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Trash2, Download, Eye, Search } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { ABCConfiguration, AnalysisPeriod } from "@/types/abc";
 import { format } from "date-fns";
+import { ItemDetailDialog } from "./ItemDetailDialog";
 
 interface ABCTableProps {
   items: MedicineItem[];
@@ -17,6 +20,10 @@ interface ABCTableProps {
 }
 
 export const ABCTable = ({ items, onDeleteItem, abcConfig, period }: ABCTableProps) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedItem, setSelectedItem] = useState<MedicineItem | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const getClassBadge = (classification: "A" | "B" | "C") => {
     const variants = {
       A: "bg-[hsl(var(--class-a))] text-[hsl(var(--class-a-foreground))] hover:bg-[hsl(var(--class-a))]",
@@ -51,6 +58,17 @@ export const ABCTable = ({ items, onDeleteItem, abcConfig, period }: ABCTablePro
     if (value === null || value === undefined) return '0.00%';
     return `${value.toFixed(2)}%`;
   };
+
+  // Filtrar itens baseado no termo de busca
+  const filteredItems = items.filter(item => {
+    const search = searchTerm.toLowerCase();
+    return (
+      item.name.toLowerCase().includes(search) ||
+      item.code?.toLowerCase().includes(search) ||
+      item.classification.toLowerCase().includes(search) ||
+      item.clinicalCriticality?.toLowerCase().includes(search)
+    );
+  });
 
   const exportToExcel = () => {
     // Aba 1: Dados Completos
@@ -143,19 +161,33 @@ export const ABCTable = ({ items, onDeleteItem, abcConfig, period }: ABCTablePro
   };
 
   return (
-    <Card className="overflow-hidden shadow-[var(--shadow-medium)]">
-      <div className="p-6 border-b border-border flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">Tabela Completa de Itens</h2>
-          <p className="text-sm text-muted-foreground mt-1">Análise detalhada de todos os medicamentos e materiais</p>
+    <>
+      <Card className="overflow-hidden shadow-[var(--shadow-medium)]">
+        <div className="p-6 border-b border-border space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Tabela Completa de Itens</h2>
+              <p className="text-sm text-muted-foreground mt-1">Análise detalhada de todos os medicamentos e materiais</p>
+            </div>
+            {items.length > 0 && (
+              <Button onClick={exportToExcel} variant="outline" className="gap-2">
+                <Download className="w-4 h-4" />
+                Exportar Excel
+              </Button>
+            )}
+          </div>
+          {items.length > 0 && (
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, código, classe ou criticidade..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          )}
         </div>
-        {items.length > 0 && (
-          <Button onClick={exportToExcel} variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />
-            Exportar Excel
-          </Button>
-        )}
-      </div>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -170,18 +202,24 @@ export const ABCTable = ({ items, onDeleteItem, abcConfig, period }: ABCTablePro
               <TableHead className="text-right font-semibold">% Acumulado</TableHead>
               <TableHead className="text-center font-semibold">Classe</TableHead>
               <TableHead className="text-center font-semibold">Criticidade</TableHead>
-              {onDeleteItem && <TableHead className="text-center font-semibold">Ações</TableHead>}
+              <TableHead className="text-center font-semibold">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={onDeleteItem ? 11 : 10} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                   Nenhum item cadastrado. Adicione itens para começar a análise ABC.
                 </TableCell>
               </TableRow>
+            ) : filteredItems.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                  Nenhum item encontrado com "{searchTerm}".
+                </TableCell>
+              </TableRow>
             ) : (
-              items.map((item) => (
+              filteredItems.map((item) => (
                 <TableRow key={item.id} className="hover:bg-muted/30 transition-colors">
                   <TableCell className="font-medium">{item.code}</TableCell>
                   <TableCell>{item.name}</TableCell>
@@ -201,18 +239,33 @@ export const ABCTable = ({ items, onDeleteItem, abcConfig, period }: ABCTablePro
                       {item.clinicalCriticality}
                     </Badge>
                   </TableCell>
-                  {onDeleteItem && (
-                    <TableCell className="text-center">
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onDeleteItem(item.id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setIsDialogOpen(true);
+                        }}
+                        className="h-8 w-8 p-0"
+                        title="Ver detalhes"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Eye className="h-4 w-4" />
                       </Button>
-                    </TableCell>
-                  )}
+                      {onDeleteItem && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDeleteItem(item.id)}
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          title="Excluir item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -220,5 +273,12 @@ export const ABCTable = ({ items, onDeleteItem, abcConfig, period }: ABCTablePro
         </Table>
       </div>
     </Card>
+
+    <ItemDetailDialog 
+      item={selectedItem}
+      open={isDialogOpen}
+      onOpenChange={setIsDialogOpen}
+    />
+    </>
   );
 };
