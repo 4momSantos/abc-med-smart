@@ -8,24 +8,25 @@ interface StockAlertsWidgetProps {
 
 export const StockAlertsWidget = ({ items }: StockAlertsWidgetProps) => {
   const alerts = useMemo(() => {
-    // Calcular métricas de alerta
-    const itemsWithMetrics = items.map(item => {
-      const estoqueDias = item.leadTime || Math.floor((item.quantity / (item.unitPrice || 1)) * 30) || 30;
-      const currentStock = item.currentStock || item.quantity || 1;
-      const rotatividade = (item.quantity / currentStock) * 12;
-      
-      return { ...item, estoqueDias, rotatividade };
-    });
+    // Calcular métricas de alerta apenas com dados reais
+    const itemsWithValidData = items
+      .filter(item => item.leadTime && item.leadTime > 0 && item.currentStock && item.currentStock > 0)
+      .map(item => {
+        const estoqueDias = item.leadTime!;
+        const rotatividade = (item.quantity / item.currentStock!) * 12;
+        
+        return { ...item, estoqueDias, rotatividade };
+      });
 
-    const rupturaIminente = itemsWithMetrics.filter(
+    const rupturaIminente = itemsWithValidData.filter(
       d => d.estoqueDias < 15 && d.classification === 'A'
     ).length;
 
-    const estoqueAlto = itemsWithMetrics.filter(
+    const estoqueAlto = itemsWithValidData.filter(
       d => d.estoqueDias > 60
     ).length;
 
-    const giroBaixo = itemsWithMetrics.filter(
+    const giroBaixo = itemsWithValidData.filter(
       d => d.rotatividade < 6
     ).length;
 
