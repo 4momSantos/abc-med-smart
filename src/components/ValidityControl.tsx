@@ -10,7 +10,7 @@ import {
   Clock
 } from 'lucide-react';
 import { MedicineItem } from '@/types/medicine';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, CartesianGrid, XAxis, YAxis } from 'recharts';
 import {
   Table,
   TableBody,
@@ -25,9 +25,10 @@ interface ValidityControlProps {
 }
 
 const COLORS = {
-  expired: 'hsl(var(--expired))',
-  expiresSoon: 'hsl(var(--expires-soon))',
-  valid: 'hsl(var(--valid))',
+  expired: 'rgb(239, 68, 68)',      // vermelho
+  expiresSoon: 'rgb(234, 179, 8)',  // amarelo
+  expiring: 'rgb(59, 130, 246)',    // azul
+  valid: 'rgb(34, 197, 94)',        // verde
 };
 
 const getValidityStatus = (expirationDate?: Date) => {
@@ -100,6 +101,7 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
     };
 
     const criticalItems: Array<MedicineItem & { status: string; daysUntilExpiry: number }> = [];
+    const monthlyExpiration: Record<string, number> = {};
 
     items.forEach((item) => {
       const status = getValidityStatus(item.expirationDate);
@@ -120,18 +122,35 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
       if (status === 'expired' || status === 'expiresSoon') {
         criticalItems.push({ ...item, status, daysUntilExpiry });
       }
+
+      // Agrupar por mês de vencimento (próximos 12 meses)
+      if (expiry && daysUntilExpiry >= 0 && daysUntilExpiry <= 365) {
+        const monthKey = `${expiry.getFullYear()}-${String(expiry.getMonth() + 1).padStart(2, '0')}`;
+        monthlyExpiration[monthKey] = (monthlyExpiration[monthKey] || 0) + 1;
+      }
     });
 
     // Sort critical items by days until expiry
     criticalItems.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
 
-    return { stats, criticalItems: criticalItems.slice(0, 10) };
+    // Preparar dados do gráfico de barras mensal
+    const monthlyData = Object.entries(monthlyExpiration)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(0, 12)
+      .map(([monthKey, count]) => {
+        const [year, month] = monthKey.split('-');
+        const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+        return { month: monthName, count };
+      });
+
+    return { stats, criticalItems: criticalItems.slice(0, 10), monthlyData };
   }, [items]);
 
   const chartData = [
     { name: 'Vencidos', value: validityData.stats.expired, color: COLORS.expired },
     { name: 'Vence em 30 dias', value: validityData.stats.expiresSoon, color: COLORS.expiresSoon },
-    { name: 'Válidos', value: validityData.stats.valid + validityData.stats.expiring, color: COLORS.valid },
+    { name: 'Vence em 90 dias', value: validityData.stats.expiring, color: COLORS.expiring },
+    { name: 'Válidos', value: validityData.stats.valid, color: COLORS.valid },
   ].filter(d => d.value > 0);
 
   const hasValidityData = items.some(item => item.expirationDate);
@@ -234,7 +253,7 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
         </Card>
       </div>
 
-      {/* Chart and Critical Items */}
+      {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pie Chart */}
         <Card>
@@ -265,59 +284,98 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
           </CardContent>
         </Card>
 
-        {/* Critical Items Table */}
-        {hasCriticalItems && (
+        {/* Monthly Expiration Bar Chart */}
+        {validityData.monthlyData.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-warning" />
-                Itens Críticos (Top 10)
+                <Calendar className="w-5 h-5" />
+                Vencimentos por Mês
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Validade</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {validityData.criticalItems.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        {item.name}
-                        {item.code && (
-                          <span className="text-xs text-muted-foreground block">
-                            {item.code}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {item.expirationDate
-                          ? new Date(item.expirationDate).toLocaleDateString('pt-BR')
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {item.totalValue.toLocaleString('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                          minimumFractionDigits: 0,
-                        })}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(item.status, item.daysUntilExpiry)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={validityData.monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="month" 
+                    className="text-xs"
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis className="text-xs" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="count" 
+                    fill={COLORS.expiresSoon}
+                    name="Itens vencendo"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         )}
       </div>
+
+      {/* Critical Items Table */}
+      {hasCriticalItems && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              Itens Críticos (Top 10)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item</TableHead>
+                  <TableHead>Validade</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {validityData.criticalItems.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">
+                      {item.name}
+                      {item.code && (
+                        <span className="text-xs text-muted-foreground block">
+                          {item.code}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {item.expirationDate
+                        ? new Date(item.expirationDate).toLocaleDateString('pt-BR')
+                        : '-'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {item.totalValue.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                        minimumFractionDigits: 0,
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(item.status, item.daysUntilExpiry)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
