@@ -84,12 +84,17 @@ export default function Dashboard() {
       classDistribution[classification]++;
     });
 
-    // Calcular rotatividade média
-    const avgRotatividade = filteredItems.reduce((sum, item) => {
-      const currentStock = item.currentStock || item.quantity || 1;
-      const rotatividade = (item.quantity / currentStock) * 12;
-      return sum + rotatividade;
-    }, 0) / (filteredItems.length || 1);
+    // Calcular rotatividade média apenas com dados reais
+    const itemsWithValidStock = filteredItems.filter(
+      item => item.currentStock && item.currentStock > 0
+    );
+    
+    const avgRotatividade = itemsWithValidStock.length > 0
+      ? itemsWithValidStock.reduce((sum, item) => {
+          const rotatividade = (item.quantity / item.currentStock!) * 12;
+          return sum + rotatividade;
+        }, 0) / itemsWithValidStock.length
+      : 0;
 
     return { totalValue, classDistribution, avgRotatividade };
   }, [filteredItems]);
