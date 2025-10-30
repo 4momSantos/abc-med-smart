@@ -102,8 +102,8 @@ export const ABCChart = ({ items }: ABCChartProps) => {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <ComposedChart 
+    <ResponsiveContainer width="100%" height={500}>
+      <ComposedChart
         data={chartData} 
         margin={{ 
           top: 20, 

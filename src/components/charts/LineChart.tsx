@@ -6,7 +6,27 @@ interface LineChartProps {
   title?: string;
 }
 
+// Cores RGB que funcionam em light e dark mode
+const ABC_COLORS = {
+  A: 'rgb(34, 197, 94)',   // verde
+  B: 'rgb(234, 179, 8)',   // amarelo
+  C: 'rgb(239, 68, 68)',   // vermelho
+};
+
+const getTextColor = () => {
+  const isDark = document.documentElement.classList.contains('dark');
+  return isDark ? 'rgb(255, 255, 255)' : 'rgb(15, 23, 42)';
+};
+
+const getGridColor = () => {
+  const isDark = document.documentElement.classList.contains('dark');
+  return isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.1)';
+};
+
 export const LineChart = ({ items, title = "Curva de Valor Acumulado" }: LineChartProps) => {
+  const textColor = getTextColor();
+  const gridColor = getGridColor();
+
   const data = [
     {
       x: items.map((_, idx) => idx + 1),
@@ -15,14 +35,14 @@ export const LineChart = ({ items, title = "Curva de Valor Acumulado" }: LineCha
       mode: "lines+markers" as const,
       name: "% Acumulado",
       line: {
-        color: "hsl(var(--primary))",
+        color: 'rgb(99, 102, 241)',
         width: 3
       },
       marker: {
         color: items.map(i => 
-          i.classification === "A" ? "hsl(var(--chart-1))" :
-          i.classification === "B" ? "hsl(var(--chart-2))" :
-          "hsl(var(--chart-3))"
+          i.classification === "A" ? ABC_COLORS.A :
+          i.classification === "B" ? ABC_COLORS.B :
+          ABC_COLORS.C
         ),
         size: 6
       },
@@ -40,7 +60,7 @@ export const LineChart = ({ items, title = "Curva de Valor Acumulado" }: LineCha
       y0: 80,
       y1: 80,
       line: {
-        color: "hsl(var(--chart-1))",
+        color: ABC_COLORS.A,
         width: 2,
         dash: "dash" as const
       }
@@ -52,7 +72,7 @@ export const LineChart = ({ items, title = "Curva de Valor Acumulado" }: LineCha
       y0: 95,
       y1: 95,
       line: {
-        color: "hsl(var(--chart-2))",
+        color: ABC_COLORS.B,
         width: 2,
         dash: "dash" as const
       }
@@ -66,24 +86,26 @@ export const LineChart = ({ items, title = "Curva de Valor Acumulado" }: LineCha
         autosize: true,
         paper_bgcolor: "transparent",
         plot_bgcolor: "transparent",
-        font: { color: "hsl(var(--foreground))" },
-        margin: { t: 20, b: 60, l: 60, r: 20 },
+        font: { color: textColor, size: 13 },
+        margin: { t: 30, b: 70, l: 70, r: 30 },
         xaxis: {
-          title: "Itens (ordenados por valor)",
-          gridcolor: "hsl(var(--border))",
-          color: "hsl(var(--foreground))"
+          title: { text: "Itens (ordenados por valor)", font: { color: textColor } },
+          gridcolor: gridColor,
+          color: textColor,
+          tickfont: { color: textColor }
         },
         yaxis: {
-          title: "Percentual Acumulado (%)",
-          gridcolor: "hsl(var(--border))",
-          color: "hsl(var(--foreground))",
+          title: { text: "Percentual Acumulado (%)", font: { color: textColor } },
+          gridcolor: gridColor,
+          color: textColor,
+          tickfont: { color: textColor },
           range: [0, 105]
         },
         shapes,
         showlegend: false
       }}
       config={{ responsive: true, displayModeBar: false }}
-      style={{ width: "100%", height: "400px" }}
+      style={{ width: "100%", height: "500px" }}
     />
   );
 };

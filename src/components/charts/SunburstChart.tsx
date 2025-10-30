@@ -6,6 +6,20 @@ interface SunburstChartProps {
   title?: string;
 }
 
+// Cores RGB que funcionam em light e dark mode
+const getTextColor = () => {
+  const isDark = document.documentElement.classList.contains('dark');
+  return isDark ? 'rgb(255, 255, 255)' : 'rgb(15, 23, 42)';
+};
+
+const getSunburstColors = () => [
+  'rgb(34, 197, 94)',   // verde (A)
+  'rgb(234, 179, 8)',   // amarelo (B)
+  'rgb(239, 68, 68)',   // vermelho (C)
+  'rgb(99, 102, 241)',  // índigo
+  'rgb(168, 85, 247)',  // roxo
+];
+
 export const SunburstChart = ({ items, title = "Hierarquia Circular de Valor" }: SunburstChartProps) => {
   const classA = items.filter(i => i.classification === "A");
   const classB = items.filter(i => i.classification === "B");
@@ -42,6 +56,9 @@ export const SunburstChart = ({ items, title = "Hierarquia Circular de Valor" }:
     values.push(item.totalValue);
   });
 
+  const textColor = getTextColor();
+  const sunburstColors = getSunburstColors();
+
   const data = [
     {
       type: "sunburst" as const,
@@ -50,7 +67,14 @@ export const SunburstChart = ({ items, title = "Hierarquia Circular de Valor" }:
       values: values,
       branchvalues: "total",
       marker: {
-        line: { width: 2 }
+        line: { 
+          width: 2,
+          color: textColor
+        }
+      },
+      textfont: {
+        size: 13,
+        color: textColor
       },
       hovertemplate: "<b>%{label}</b><br>Valor: R$ %{value:.2f}<br><extra></extra>"
     }
@@ -63,18 +87,12 @@ export const SunburstChart = ({ items, title = "Hierarquia Circular de Valor" }:
         autosize: true,
         paper_bgcolor: "transparent",
         plot_bgcolor: "transparent",
-        font: { color: "hsl(var(--foreground))" },
-        margin: { t: 0, b: 0, l: 0, r: 0 },
-        sunburstcolorway: [
-          "hsl(var(--chart-1))",
-          "hsl(var(--chart-2))",
-          "hsl(var(--chart-3))",
-          "hsl(var(--chart-4))",
-          "hsl(var(--chart-5))"
-        ]
+        font: { color: textColor, size: 13 },
+        margin: { t: 10, b: 10, l: 10, r: 10 },
+        sunburstcolorway: sunburstColors
       }}
       config={{ responsive: true, displayModeBar: false }}
-      style={{ width: "100%", height: "450px" }}
+      style={{ width: "100%", height: "500px" }}
     />
   );
 };

@@ -6,6 +6,13 @@ interface RadarChartProps {
   title?: string;
 }
 
+// Cores RGB que funcionam em light e dark mode
+const ABC_COLORS = {
+  A: 'rgb(34, 197, 94)',   // verde
+  B: 'rgb(234, 179, 8)',   // amarelo
+  C: 'rgb(239, 68, 68)',   // vermelho
+};
+
 export const RadarChart = ({ items, title = "Perfil Multidimensional por Classe" }: RadarChartProps) => {
   const classA = items.filter(i => i.classification === "A");
   const classB = items.filter(i => i.classification === "B");
@@ -55,15 +62,49 @@ export const RadarChart = ({ items, title = "Perfil Multidimensional por Classe"
   ];
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
+    <ResponsiveContainer width="100%" height={500}>
       <RechartsRadar data={data}>
-        <PolarGrid stroke="hsl(var(--border))" />
-        <PolarAngleAxis dataKey="subject" tick={{ fill: "hsl(var(--foreground))" }} />
-        <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: "hsl(var(--muted-foreground))" }} />
-        <Radar name="Classe A" dataKey="A" stroke="hsl(var(--chart-1))" fill="hsl(var(--chart-1))" fillOpacity={0.6} />
-        <Radar name="Classe B" dataKey="B" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.6} />
-        <Radar name="Classe C" dataKey="C" stroke="hsl(var(--chart-3))" fill="hsl(var(--chart-3))" fillOpacity={0.6} />
-        <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
+        <PolarGrid stroke="hsl(var(--border))" opacity={0.3} />
+        <PolarAngleAxis 
+          dataKey="subject" 
+          tick={{ fill: "hsl(var(--foreground))", fontSize: 13 }} 
+        />
+        <PolarRadiusAxis 
+          angle={90} 
+          domain={[0, 100]} 
+          tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} 
+        />
+        <Radar 
+          name="Classe A" 
+          dataKey="A" 
+          stroke={ABC_COLORS.A} 
+          fill={ABC_COLORS.A} 
+          fillOpacity={0.5}
+          strokeWidth={2}
+        />
+        <Radar 
+          name="Classe B" 
+          dataKey="B" 
+          stroke={ABC_COLORS.B} 
+          fill={ABC_COLORS.B} 
+          fillOpacity={0.5}
+          strokeWidth={2}
+        />
+        <Radar 
+          name="Classe C" 
+          dataKey="C" 
+          stroke={ABC_COLORS.C} 
+          fill={ABC_COLORS.C} 
+          fillOpacity={0.5}
+          strokeWidth={2}
+        />
+        <Legend 
+          wrapperStyle={{ 
+            color: "hsl(var(--foreground))",
+            fontSize: "13px",
+            paddingTop: "10px"
+          }} 
+        />
       </RechartsRadar>
     </ResponsiveContainer>
   );

@@ -87,7 +87,7 @@ export const FunnelChart = ({ items, title = "Funil de Classificação ABC" }: F
         }
       }}
       config={{ responsive: true, displayModeBar: false }}
-      style={{ width: "100%", height: "400px" }}
+      style={{ width: "100%", height: "500px" }}
     />
   );
 };
