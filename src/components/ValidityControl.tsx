@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ItemDetailDialog } from './ItemDetailDialog';
 
 interface ValidityControlProps {
   items: MedicineItem[];
@@ -88,6 +89,8 @@ const getStatusBadge = (status: string, daysUntilExpiry?: number) => {
 
 export const ValidityControl = ({ items }: ValidityControlProps) => {
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<MedicineItem | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const validityData = useMemo(() => {
     const stats = {
@@ -410,7 +413,14 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
               </TableHeader>
               <TableBody>
                 {filteredItems.map((item) => (
-                  <TableRow key={item.id}>
+                  <TableRow 
+                    key={item.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setIsDialogOpen(true);
+                    }}
+                  >
                     <TableCell className="font-medium">
                       {item.name}
                       {item.code && (
@@ -441,6 +451,13 @@ export const ValidityControl = ({ items }: ValidityControlProps) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Item Detail Dialog */}
+      <ItemDetailDialog 
+        item={selectedItem}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+      />
     </div>
   );
 };
