@@ -12,17 +12,27 @@ const getABCColors = () => {
   
   if (isDark) {
     return {
-      A: 'rgb(66, 218, 134)',  // Verde vibrante
-      B: 'rgb(245, 194, 61)',  // Amarelo/Laranja
-      C: 'rgb(235, 110, 115)', // Vermelho/Rosa
+      A: 'rgb(74, 222, 128)',    // Verde vibrante
+      B: 'rgb(251, 191, 36)',    // Amarelo/Laranja vibrante
+      C: 'rgb(248, 113, 113)',   // Vermelho/Rosa vibrante
     };
   }
   
   return {
-    A: 'rgb(39, 174, 96)',   // Verde
-    B: 'rgb(247, 202, 24)',  // Amarelo
-    C: 'rgb(231, 76, 60)',   // Vermelho
+    A: 'rgb(34, 197, 94)',     // Verde escuro
+    B: 'rgb(234, 179, 8)',     // Amarelo escuro
+    C: 'rgb(239, 68, 68)',     // Vermelho escuro
   };
+};
+
+const getTextColor = () => {
+  const isDark = document.documentElement.classList.contains('dark');
+  return isDark ? 'rgb(226, 232, 240)' : 'rgb(30, 41, 59)';
+};
+
+const getGridColor = () => {
+  const isDark = document.documentElement.classList.contains('dark');
+  return isDark ? 'rgba(148, 163, 184, 0.2)' : 'rgba(100, 116, 139, 0.2)';
 };
 
 export const PieChart = ({ items, title = "Distribuição por Classe ABC" }: PieChartProps) => {
@@ -31,6 +41,7 @@ export const PieChart = ({ items, title = "Distribuição por Classe ABC" }: Pie
   const classC = items.filter(i => i.classification === "C");
 
   const colors = getABCColors();
+  const textColor = getTextColor();
 
   const data = [
     {
@@ -38,8 +49,10 @@ export const PieChart = ({ items, title = "Distribuição por Classe ABC" }: Pie
       labels: ["Classe A", "Classe B", "Classe C"],
       type: "pie" as const,
       marker: {
-        colors: [colors.A, colors.B, colors.C]
+        colors: [colors.A, colors.B, colors.C],
+        line: { color: textColor, width: 1 }
       },
+      textfont: { color: textColor, size: 12 },
       textinfo: "label+percent",
       hovertemplate: "<b>%{label}</b><br>Itens: %{value}<br>Percentual: %{percent}<extra></extra>"
     }
@@ -52,7 +65,7 @@ export const PieChart = ({ items, title = "Distribuição por Classe ABC" }: Pie
         autosize: true,
         paper_bgcolor: "transparent",
         plot_bgcolor: "transparent",
-        font: { color: "hsl(var(--foreground))" },
+        font: { color: textColor, size: 12 },
         margin: { t: 10, b: 10, l: 10, r: 10 },
         showlegend: true,
         legend: {
@@ -60,7 +73,8 @@ export const PieChart = ({ items, title = "Distribuição por Classe ABC" }: Pie
           yanchor: "middle",
           y: 0.5,
           xanchor: "left",
-          x: 1.05
+          x: 1.05,
+          font: { color: textColor }
         }
       }}
       config={{ responsive: true, displayModeBar: false }}
