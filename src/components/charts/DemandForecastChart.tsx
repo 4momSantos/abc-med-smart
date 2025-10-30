@@ -63,15 +63,14 @@ export const DemandForecastChart = ({ items }: DemandForecastChartProps) => {
           fill="#3b82f6" 
           fillOpacity={0.2}
           stroke="none"
-          name="Intervalo Superior"
+          name="Intervalo de Confiança"
         />
         <Area 
           type="monotone" 
           dataKey="min" 
-          fill="#ffffff" 
+          fill="hsl(var(--background))" 
           fillOpacity={1}
           stroke="none"
-          name="Intervalo Inferior"
         />
         <Line 
           type="monotone" 
