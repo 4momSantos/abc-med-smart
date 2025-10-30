@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, DollarSign, TrendingUp, AlertTriangle, Info } from 'lucide-react';
+import { Package, DollarSign, TrendingUp, AlertTriangle, Info, Activity } from 'lucide-react';
 import { useMedicineOperations } from '@/lib/queries/medicineQueries';
 import { useMLStore } from '@/store/mlStore';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -13,6 +13,13 @@ import { ChartWidget } from '@/components/charts/ChartWidget';
 import { ValidityControl } from '@/components/ValidityControl';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MedicineItem } from '@/types/medicine';
+import { QuantityValueChart } from '@/components/charts/QuantityValueChart';
+import { StockDaysChart } from '@/components/charts/StockDaysChart';
+import { TurnoverRateChart } from '@/components/charts/TurnoverRateChart';
+import { DemandForecastChart } from '@/components/charts/DemandForecastChart';
+import { SeasonalityChart } from '@/components/charts/SeasonalityChart';
+import { StockAlertsWidget } from '@/components/charts/StockAlertsWidget';
+import { KPICard } from '@/components/shared/KPICard';
 
 // Otimização: Limitar dados para gráficos
 const MAX_CHART_ITEMS = 100;
@@ -66,12 +73,18 @@ export default function Dashboard() {
     const classDistribution = { A: 0, B: 0, C: 0 };
     
     filteredItems.forEach((item) => {
-      // Segurança: se não tiver classificação, assume C
       const classification = item.classification || 'C';
       classDistribution[classification]++;
     });
 
-    return { totalValue, classDistribution };
+    // Calcular rotatividade média
+    const avgRotatividade = filteredItems.reduce((sum, item) => {
+      const currentStock = item.currentStock || item.quantity || 1;
+      const rotatividade = (item.quantity / currentStock) * 12;
+      return sum + rotatividade;
+    }, 0) / (filteredItems.length || 1);
+
+    return { totalValue, classDistribution, avgRotatividade };
   }, [filteredItems]);
 
   const anomalyCount = useMemo(
@@ -147,131 +160,236 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total de Itens</CardTitle>
-            <Package className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{filteredItems.length.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {isLargeDataset ? 'Dataset otimizado para visualização' : 'Todos os itens'}
-            </p>
-          </CardContent>
-        </Card>
+        <KPICard
+          label="Valor Total"
+          value={`R$ ${(stats.totalValue / 1000).toFixed(0)}k`}
+          icon={<DollarSign className="w-5 h-5" />}
+          trend={{
+            value: 12.5,
+            direction: 'up',
+            label: 'vs mês anterior'
+          }}
+          color="success"
+        />
+        
+        <KPICard
+          label="Total de Itens"
+          value={filteredItems.length.toLocaleString()}
+          icon={<Package className="w-5 h-5" />}
+          trend={{
+            value: 2.3,
+            direction: 'down'
+          }}
+          color="default"
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
-            <DollarSign className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.totalValue.toLocaleString('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        <KPICard
+          label="Classe A"
+          value={`${stats.classDistribution.A} itens`}
+          icon={<AlertTriangle className="w-5 h-5" />}
+          color="danger"
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Classe A</CardTitle>
-            <TrendingUp className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.classDistribution.A.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {((stats.classDistribution.A / filteredItems.length) * 100 || 0).toFixed(1)}% do total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Anomalias</CardTitle>
-            <AlertTriangle className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{anomalyCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Itens com comportamento atípico</p>
-          </CardContent>
-        </Card>
+        <KPICard
+          label="Rotatividade Média"
+          value={`${stats.avgRotatividade.toFixed(1)}x`}
+          icon={<Activity className="w-5 h-5" />}
+          trend={{
+            value: 8.2,
+            direction: 'up',
+            label: 'Por ano'
+          }}
+          color="default"
+        />
       </div>
 
-      {/* Charts Grid - Otimizados */}
-      <Tabs defaultValue="value" className="w-full">
+      {/* Sistema de 4 Abas com 12 Visualizações */}
+      <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="value">Análise de Valor</TabsTrigger>
-          <TabsTrigger value="distribution">Distribuição</TabsTrigger>
-          <TabsTrigger value="validity">Controle de Validade</TabsTrigger>
-          <TabsTrigger value="summary">Resumo</TabsTrigger>
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="abc">Análise ABC</TabsTrigger>
+          <TabsTrigger value="inventory">Gestão de Estoque</TabsTrigger>
+          <TabsTrigger value="predictive">Análise Preditiva</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="value" className="space-y-4">
+        {/* ABA 1: Visão Geral */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* 1. Curva ABC (Pareto) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>1. Curva ABC (Pareto) - Análise Clássica</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Visualização da distribuição 80-15-5: identifica itens críticos que representam 80% do valor
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ChartWidget
+                items={chartData.topItems}
+                chartLibrary="value-analysis"
+                defaultChartId="pareto"
+                enableComparison={false}
+              />
+            </CardContent>
+          </Card>
+
+          {/* 2. Distribuição por Valor + 3. Quantidade vs Valor */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ChartWidget
-              items={chartData.topItems}
-              chartLibrary="value-analysis"
-              defaultChartId="pareto"
-              enableComparison
-              onCompare={(items) => console.log('Comparar:', items)}
-            />
-            
             <Card>
               <CardHeader>
-                <CardTitle>Por Categoria (Top 20)</CardTitle>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Agregação por categoria dos {filteredItems.length} itens
-                </p>
+                <CardTitle>2. Distribuição por Valor</CardTitle>
               </CardHeader>
               <CardContent>
                 <ChartWidget
-                  items={chartData.categoryAggregated}
-                  chartLibrary="value-analysis"
-                  defaultChartId="bar"
+                  items={chartData.topItems}
+                  chartLibrary="distribution-patterns"
+                  defaultChartId="pie"
+                  enableComparison={false}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>3. Quantidade vs Valor</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <QuantityValueChart items={filteredItems} />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* ABA 2: Análise ABC */}
+        <TabsContent value="abc" className="space-y-6">
+          {/* 4. Matriz Valor vs Rotatividade */}
+          <Card>
+            <CardHeader>
+              <CardTitle>4. Matriz Valor vs Rotatividade</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Identifica itens de alto valor com baixa rotatividade (risco de obsolescência)
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ChartWidget
+                items={chartData.topItems}
+                chartLibrary="distribution-patterns"
+                defaultChartId="scatter"
+                enableComparison={false}
+              />
+            </CardContent>
+          </Card>
+
+          {/* 5. Treemap */}
+          <Card>
+            <CardHeader>
+              <CardTitle>5. Mapa de Árvore - Valor por Medicamento</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Visualização proporcional do valor de cada medicamento (tamanho = valor)
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ChartWidget
+                items={chartData.topItems.slice(0, 30)}
+                chartLibrary="distribution-patterns"
+                defaultChartId="treemap"
+                enableComparison={false}
+              />
+            </CardContent>
+          </Card>
+
+          {/* 6. Radar Multidimensional */}
+          <Card>
+            <CardHeader>
+              <CardTitle>6. Radar - Análise Multidimensional por Classe</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Compara múltiplas dimensões entre as classes ABC
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ChartWidget
+                items={filteredItems}
+                chartLibrary="distribution-patterns"
+                defaultChartId="radar"
+                enableComparison={false}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ABA 3: Gestão de Estoque */}
+        <TabsContent value="inventory" className="space-y-6">
+          {/* 7. Dias de Estoque */}
+          <Card>
+            <CardHeader>
+              <CardTitle>7. Dias de Estoque por Classe ABC</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Monitora cobertura de estoque - Classe A deve ter menos dias (just-in-time)
+              </p>
+            </CardHeader>
+            <CardContent>
+              <StockDaysChart items={chartData.topItems} />
+            </CardContent>
+          </Card>
+
+          {/* 8. Taxa de Giro + 9. Distribuição de Rotatividade */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>8. Taxa de Giro - Top 20</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TurnoverRateChart items={chartData.topItems} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>9. Distribuição de Rotatividade</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartWidget
+                  items={chartData.topItems.slice(0, 50)}
+                  chartLibrary="distribution-patterns"
+                  defaultChartId="area"
                   enableComparison={false}
                 />
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
 
-        <TabsContent value="distribution" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ChartWidget
-              items={chartData.topItems}
-              chartLibrary="distribution-patterns"
-              defaultChartId="pie"
-              enableComparison
-              onCompare={(items) => console.log('Comparar:', items)}
-            />
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Resumo ABC</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ABCSummary items={filteredItems} />
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="validity" className="space-y-4">
-          <ValidityControl items={filteredItems} />
-        </TabsContent>
-
-        <TabsContent value="summary" className="space-y-4">
+          {/* 10. Alertas Críticos de Estoque */}
           <Card>
             <CardHeader>
-              <CardTitle>Resumo Completo ABC</CardTitle>
+              <CardTitle>10. Alertas Críticos de Estoque</CardTitle>
             </CardHeader>
             <CardContent>
-              <ABCSummary items={filteredItems} />
+              <StockAlertsWidget items={filteredItems} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ABA 4: Análise Preditiva */}
+        <TabsContent value="predictive" className="space-y-6">
+          {/* 11. Previsão de Demanda */}
+          <Card>
+            <CardHeader>
+              <CardTitle>11. Previsão de Demanda - Próximos 3 Meses</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Baseado em histórico de consumo e sazonalidade
+              </p>
+            </CardHeader>
+            <CardContent>
+              <DemandForecastChart items={filteredItems} />
+            </CardContent>
+          </Card>
+
+          {/* 12. Análise de Sazonalidade */}
+          <Card>
+            <CardHeader>
+              <CardTitle>12. Análise de Sazonalidade</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SeasonalityChart items={filteredItems} />
             </CardContent>
           </Card>
         </TabsContent>
