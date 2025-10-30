@@ -146,6 +146,18 @@ export const useDataStore = create<DataState>((set, get) => ({
         toast.info('Nenhum medicamento encontrado nesta organização');
       }
 
+      // Log detalhado dos dados reais
+      console.log('=== DADOS REAIS DO BANCO ===');
+      console.log('Total de itens:', data?.length || 0);
+      const realTotalValue = (data || []).reduce((sum, item) => sum + Number(item.total_value), 0);
+      console.log('Valor Total Real:', realTotalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+      const realClassA = (data || []).filter(item => item.classification === 'A').length;
+      const realClassB = (data || []).filter(item => item.classification === 'B').length;
+      const realClassC = (data || []).filter(item => item.classification === 'C').length;
+      console.log('Classe A:', realClassA, 'Classe B:', realClassB, 'Classe C:', realClassC);
+      console.log('Organization ID:', orgId);
+      console.log('===========================');
+
       // Desempacotar estrutura híbrida (campos principais + extra_data JSONB)
       const items = (data || []).map((row) => {
         const extra = (row.extra_data as any) || {};
