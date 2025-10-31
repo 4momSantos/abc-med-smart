@@ -21,14 +21,37 @@ import { SeasonalityChart } from '@/components/charts/SeasonalityChart';
 import { StockAlertsWidget } from '@/components/charts/StockAlertsWidget';
 import { KPICard } from '@/components/shared/KPICard';
 
-// Otimização: Limitar dados para gráficos
-const MAX_CHART_ITEMS = 100;
+// Otimização: Limitar dados para gráficos mantendo representatividade de todas as classes
+const MAX_CHART_ITEMS = 500;
 const MAX_TABLE_ITEMS = 50;
 
-const getTopItemsByValue = (items: MedicineItem[], limit: number): MedicineItem[] => {
-  return [...items]
-    .sort((a, b) => b.totalValue - a.totalValue)
-    .slice(0, limit);
+const getRepresentativeItems = (items: MedicineItem[], limit: number): MedicineItem[] => {
+  const classA = items.filter(i => i.classification === 'A');
+  const classB = items.filter(i => i.classification === 'B');
+  const classC = items.filter(i => i.classification === 'C');
+  
+  // Distribuir proporcionalmente, mas garantir pelo menos alguns de cada classe
+  const totalItems = items.length;
+  const minPerClass = Math.min(20, Math.floor(limit / 3));
+  
+  let aCount = Math.max(minPerClass, Math.floor((classA.length / totalItems) * limit));
+  let bCount = Math.max(minPerClass, Math.floor((classB.length / totalItems) * limit));
+  let cCount = Math.max(minPerClass, Math.floor((classC.length / totalItems) * limit));
+  
+  // Ajustar para não ultrapassar o limite
+  const total = aCount + bCount + cCount;
+  if (total > limit) {
+    const ratio = limit / total;
+    aCount = Math.floor(aCount * ratio);
+    bCount = Math.floor(bCount * ratio);
+    cCount = limit - aCount - bCount;
+  }
+  
+  const selectedA = classA.sort((a, b) => b.totalValue - a.totalValue).slice(0, aCount);
+  const selectedB = classB.sort((a, b) => b.totalValue - a.totalValue).slice(0, bCount);
+  const selectedC = classC.sort((a, b) => b.totalValue - a.totalValue).slice(0, cCount);
+  
+  return [...selectedA, ...selectedB, ...selectedC].sort((a, b) => b.totalValue - a.totalValue);
 };
 
 const aggregateByCategory = (items: MedicineItem[]): MedicineItem[] => {
@@ -107,9 +130,9 @@ export default function Dashboard() {
   // Dados otimizados para gráficos
   const chartData = useMemo(() => {
     if (isLargeDataset) {
-      // Para datasets grandes: mostrar top itens e agregações por categoria
+      // Para datasets grandes: amostra representativa com todas as classes
       return {
-        topItems: getTopItemsByValue(filteredItems, MAX_CHART_ITEMS),
+        topItems: getRepresentativeItems(filteredItems, MAX_CHART_ITEMS),
         categoryAggregated: aggregateByCategory(filteredItems),
       };
     }
@@ -162,7 +185,7 @@ export default function Dashboard() {
           <Info className="h-4 w-4" />
           <AlertDescription>
             <strong>Grande volume de dados detectado ({filteredItems.length.toLocaleString()} itens).</strong>
-            {' '}Os gráficos estão mostrando os {MAX_CHART_ITEMS} itens de maior valor e agregações por categoria para melhor desempenho.
+            {' '}Os gráficos estão mostrando uma amostra representativa de {MAX_CHART_ITEMS} itens de todas as classes (A, B e C) para melhor desempenho.
             Use os filtros para análises mais detalhadas.
           </AlertDescription>
         </Alert>
