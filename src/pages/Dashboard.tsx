@@ -229,13 +229,14 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Sistema de 4 Abas com 12 Visualizações */}
+      {/* Sistema de 5 Abas */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="abc">Análise ABC</TabsTrigger>
           <TabsTrigger value="inventory">Gestão de Estoque</TabsTrigger>
           <TabsTrigger value="predictive">Análise Preditiva</TabsTrigger>
+          <TabsTrigger value="validity">Controle de Validades</TabsTrigger>
         </TabsList>
 
         {/* ABA 1: Visão Geral */}
@@ -418,6 +419,11 @@ export default function Dashboard() {
               <SeasonalityChart items={filteredItems} />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ABA 5: Controle de Validades */}
+        <TabsContent value="validity" className="space-y-6">
+          <ValidityControl items={filteredItems} />
         </TabsContent>
       </Tabs>
 
