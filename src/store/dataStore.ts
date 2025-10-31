@@ -136,27 +136,15 @@ export const useDataStore = create<DataState>((set, get) => ({
         .from('medicines')
         .select('*')
         .eq('organization_id', orgId)
-        .order('created_at', { ascending: false });
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(10000);
 
       if (error) throw error;
-
-      console.log('📊 Found items:', data?.length || 0);
 
       if (!data || data.length === 0) {
         toast.info('Nenhum medicamento encontrado nesta organização');
       }
-
-      // Log detalhado dos dados reais
-      console.log('=== DADOS REAIS DO BANCO ===');
-      console.log('Total de itens:', data?.length || 0);
-      const realTotalValue = (data || []).reduce((sum, item) => sum + Number(item.total_value), 0);
-      console.log('Valor Total Real:', realTotalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
-      const realClassA = (data || []).filter(item => item.classification === 'A').length;
-      const realClassB = (data || []).filter(item => item.classification === 'B').length;
-      const realClassC = (data || []).filter(item => item.classification === 'C').length;
-      console.log('Classe A:', realClassA, 'Classe B:', realClassB, 'Classe C:', realClassC);
-      console.log('Organization ID:', orgId);
-      console.log('===========================');
 
       // Desempacotar estrutura híbrida (campos principais + extra_data JSONB)
       const items = (data || []).map((row) => {

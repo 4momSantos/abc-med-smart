@@ -140,11 +140,6 @@ export const useSettingsStore = create<SettingsState>()(
           if (error) throw error;
 
           set({ abcConfig: newConfig });
-          
-          // Recalculate ABC for all items
-          setTimeout(() => {
-            useDataStore.getState().recalculateABC(newConfig);
-          }, 0);
 
           toast.success('Configuração ABC atualizada');
         } catch (error) {
