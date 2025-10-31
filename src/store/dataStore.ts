@@ -227,8 +227,17 @@ export const useDataStore = create<DataState>((set, get) => ({
       });
 
       // Usar dados reais do banco sem recalcular
-      set({ items, filteredItems: items });
-      get().applyFilters();
+      // Limpar filtros ao carregar para garantir que todos os dados sejam visíveis
+      set({ 
+        items, 
+        filteredItems: items,
+        activeFilters: {} // Limpa filtros ao carregar novos dados
+      });
+      
+      console.log(`✅ Dados carregados por classe:`);
+      console.log(`   - Classe A: ${items.filter(i => i.classification === 'A').length} itens`);
+      console.log(`   - Classe B: ${items.filter(i => i.classification === 'B').length} itens`);
+      console.log(`   - Classe C: ${items.filter(i => i.classification === 'C').length} itens`);
     } catch (error) {
       console.error('Error fetching medicines:', error);
       toast.error('Erro ao carregar medicamentos');
@@ -327,11 +336,13 @@ export const useDataStore = create<DataState>((set, get) => ({
         // ... outros campos do extra_data
       } as MedicineItem;
 
-      set((state) => ({
-        items: [newItem, ...state.items],
-        filteredItems: [newItem, ...state.items],
-      }));
-      get().applyFilters();
+      set((state) => {
+        const newItems = [newItem, ...state.items];
+        return {
+          items: newItems,
+          filteredItems: applyFilterLogic(newItems, state.activeFilters)
+        };
+      });
       toast.success('Medicamento adicionado com sucesso');
     } catch (error) {
       console.error('Error adding medicine:', error);
@@ -347,9 +358,11 @@ export const useDataStore = create<DataState>((set, get) => ({
 
       set((state) => {
         const newItems = state.items.filter((item) => item.id !== id);
-        return { items: newItems, filteredItems: newItems };
+        return { 
+          items: newItems, 
+          filteredItems: applyFilterLogic(newItems, state.activeFilters)
+        };
       });
-      get().applyFilters();
       toast.success('Medicamento removido com sucesso');
     } catch (error) {
       console.error('Error deleting medicine:', error);
@@ -410,9 +423,11 @@ export const useDataStore = create<DataState>((set, get) => ({
 
       set((state) => {
         const newItems = state.items.map((item) => (item.id === id ? updated : item));
-        return { items: newItems, filteredItems: newItems };
+        return { 
+          items: newItems, 
+          filteredItems: applyFilterLogic(newItems, state.activeFilters)
+        };
       });
-      get().applyFilters();
       toast.success('Medicamento atualizado com sucesso');
     } catch (error) {
       console.error('Error updating medicine:', error);
