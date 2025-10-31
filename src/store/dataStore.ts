@@ -131,18 +131,41 @@ export const useDataStore = create<DataState>((set, get) => ({
         return;
       }
 
-      // Buscar medicamentos com filtro de organização
-      const { data, error } = await supabase
-        .from('medicines')
-        .select('*')
-        .eq('organization_id', orgId)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(10000);
+      // Buscar medicamentos com paginação para obter todos os registros
+      const allData: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      let hasMore = true;
 
-      if (error) throw error;
+      console.log('🔄 Iniciando carregamento paginado...');
 
-      console.log(`🔍 Query Supabase retornou: ${data?.length || 0} registros (limite configurado: 10000)`);
+      while (hasMore) {
+        const { data: batchData, error } = await supabase
+          .from('medicines')
+          .select('*')
+          .eq('organization_id', orgId)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .range(from, from + batchSize - 1);
+
+        if (error) throw error;
+
+        console.log(`📦 Lote ${Math.floor(from / batchSize) + 1}: ${batchData?.length || 0} registros carregados`);
+
+        if (!batchData || batchData.length === 0) {
+          hasMore = false;
+        } else {
+          allData.push(...batchData);
+          if (batchData.length < batchSize) {
+            hasMore = false;
+          } else {
+            from += batchSize;
+          }
+        }
+      }
+
+      const data = allData;
+      console.log(`✅ Total de registros carregados: ${data.length}`);
 
       if (!data || data.length === 0) {
         toast.info('Nenhum medicamento encontrado nesta organização');
