@@ -1,1 +1,4 @@
 project_id = "ebghucixozkdvoerqtoq"
+
+[api]
+max_rows = 10000
