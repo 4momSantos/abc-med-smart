@@ -142,6 +142,8 @@ export const useDataStore = create<DataState>((set, get) => ({
 
       if (error) throw error;
 
+      console.log(`✅ Carregados ${data?.length || 0} itens do banco de dados`);
+
       if (!data || data.length === 0) {
         toast.info('Nenhum medicamento encontrado nesta organização');
       }
