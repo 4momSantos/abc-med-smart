@@ -17,6 +17,11 @@ export function calculateABCClassification(
   items: MedicineItem[],
   config: ABCConfiguration
 ): MedicineItem[] {
+  console.error('⚠️⚠️⚠️ ATENÇÃO: calculateABCClassification FOI CHAMADA! ⚠️⚠️⚠️');
+  console.error('📊 Quantidade de itens:', items.length);
+  console.error('⚙️ Config:', config);
+  console.error('📍 Stack trace:', new Error().stack);
+  
   // Se não houver itens, retornar array vazio
   if (!items || items.length === 0) {
     console.log('[ABC] Nenhum item para classificar');
@@ -98,6 +103,11 @@ export function recalculateABCInPlace(
   items: MedicineItem[],
   config: ABCConfiguration
 ): MedicineItem[] {
+  console.error('⚠️⚠️⚠️ ATENÇÃO: recalculateABCInPlace FOI CHAMADA! ⚠️⚠️⚠️');
+  console.error('📊 Quantidade de itens:', items.length);
+  console.error('⚙️ Config:', config);
+  console.error('📍 Stack trace:', new Error().stack);
+  
   // Calcular classificações
   const classified = calculateABCClassification(items, config);
   

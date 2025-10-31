@@ -142,7 +142,7 @@ export const useDataStore = create<DataState>((set, get) => ({
 
       if (error) throw error;
 
-      console.log(`✅ Carregados ${data?.length || 0} itens do banco de dados`);
+      console.log(`🔍 Query Supabase retornou: ${data?.length || 0} registros (limite configurado: 10000)`);
 
       if (!data || data.length === 0) {
         toast.info('Nenhum medicamento encontrado nesta organização');
