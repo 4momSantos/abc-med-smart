@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,18 @@ export const FilterBar = () => {
   const { activeFilters, setActiveFilters, clearFilters, items, filteredItems } = useDataStore();
   const [searchQuery, setSearchQuery] = useState(activeFilters.searchQuery || '');
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setActiveFilters({
+        ...activeFilters,
+        searchQuery: searchQuery || undefined,
+      });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Extrair valores únicos para os selects
   const uniqueCategories = useMemo(() => 
@@ -54,10 +66,7 @@ export const FilterBar = () => {
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    setActiveFilters({
-      ...activeFilters,
-      searchQuery: value || undefined,
-    });
+    // O debounce aplicará o filtro após 300ms
   };
 
   const handleCategoryFilter = (value: string) => {
@@ -100,6 +109,11 @@ export const FilterBar = () => {
       ...activeFilters,
       criticality: value === 'all' ? undefined : value as 'alta' | 'média' | 'baixa',
     });
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    clearFilters();
   };
 
   const hasActiveFilters =
@@ -290,7 +304,7 @@ export const FilterBar = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={clearFilters}
+            onClick={handleClearFilters}
             className="ml-auto"
           >
             <X className="w-4 h-4 mr-2" />
